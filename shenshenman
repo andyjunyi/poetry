@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>李清照《声声慢》讲义 | 千古第一才女 · 愁情巅峰之作</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5efe7;   /* 仿古宣纸底色 */
+            font-family: 'Segoe UI', '华文楷书', 'Microsoft YaHei', '宋体', 'KaiTi', 'Georgia', serif;
+            color: #2c2418;
+            line-height: 1.65;
+            padding: 2rem 1rem;
+        }
+
+        /* 讲义主容器 - 古书卷风格 */
+        .handout {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fffef7;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2), 0 0 0 1px #e8dccc inset, 0 0 0 2px #fef9e6 inset;
+            border-radius: 4px;
+            padding: 2rem 2rem 2.8rem;
+            transition: all 0.2s;
+        }
+
+        /* 头部 + 标题 */
+        .title-section {
+            text-align: center;
+            border-bottom: 2px solid #d9c8a9;
+            margin-bottom: 2rem;
+            padding-bottom: 1.2rem;
+        }
+
+        .poem-title {
+            font-size: 2.8rem;
+            font-weight: 500;
+            letter-spacing: 6px;
+            color: #6b3e1c;
+            font-family: '华文楷书', 'KaiTi', serif;
+            text-shadow: 1px 1px 0 #ecd9b4;
+        }
+
+        .sub {
+            font-size: 1rem;
+            color: #8b6946;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* 原文区域 —— 典雅框 */
+        .original-poem {
+            background: #fef7e8;
+            border-left: 8px solid #bc9a6c;
+            padding: 1.3rem 2rem;
+            margin: 2rem 0 2rem;
+            border-radius: 0 24px 24px 0;
+            font-family: '华文楷书', 'KaiTi', 'Georgia', serif;
+            font-size: 1.1rem;
+            line-height: 1.9;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+        }
+
+        .original-poem p {
+            white-space: pre-line;
+            text-indent: 0;
+            margin: 0.25rem 0;
+        }
+
+        .stanza {
+            margin-bottom: 0.75rem;
+        }
+
+        /* 章节约分隔 */
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            border-left: 6px solid #bc9a6c;
+            padding-left: 18px;
+            margin: 1.8rem 0 1rem 0;
+            color: #4d341a;
+            font-family: '华文楷书', 'KaiTi', serif;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 1.2rem 0 0.5rem 0;
+            color: #6f4a2e;
+            display: inline-block;
+            border-bottom: 1px dashed #d4bd97;
+            padding-right: 0.5rem;
+        }
+
+        .author-card {
+            background: #faf3e2;
+            padding: 1rem 1.6rem;
+            border-radius: 28px;
+            margin: 1.2rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .intro-text {
+            flex: 1;
+        }
+
+        .bio-highlight {
+            font-weight: 500;
+            color: #9b5e2c;
+        }
+
+        .timeline {
+            background: #f9f2e4;
+            padding: 0.8rem 1.4rem;
+            border-radius: 20px;
+            margin: 0.8rem 0;
+            border: 1px solid #e4d5bc;
+        }
+
+        .timeline span {
+            font-weight: bold;
+            color: #8b4b1c;
+        }
+
+        /* 赏析要点卡片 */
+        .appreciation-block {
+            background: #fefaf2;
+            border-radius: 32px;
+            padding: 0.8rem 1.8rem 1.2rem;
+            margin: 1.6rem 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            margin: 1rem 0;
+            padding-left: 28px;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "✤";
+            color: #bc9a6c;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .quote-comment {
+            background: #f0e8da;
+            padding: 1rem 1.8rem;
+            margin: 1.8rem 0;
+            border-radius: 40px 12px 40px 12px;
+            font-style: normal;
+            border-left: 4px solid #bc9a6c;
+            font-size: 0.98rem;
+        }
+
+        .master-comment {
+            font-weight: 500;
+            color: #5c391d;
+            margin-top: 0.8rem;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #e2d4be;
+            font-size: 0.8rem;
+            color: #9b7b58;
+            font-style: normal;
+        }
+
+        @media (max-width: 640px) {
+            .handout {
+                padding: 1.2rem;
+            }
+            .poem-title {
+                font-size: 2rem;
+                letter-spacing: 2px;
+            }
+            .original-poem {
+                padding: 0.8rem 1.2rem;
+                font-size: 1rem;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        .highlight-term {
+            background: #efe2cf;
+            padding: 0 0.2rem;
+            border-radius: 12px;
+            font-weight: 500;
+            color: #633d1c;
+        }
+    </style>
+</head>
+<body>
+<div class="handout">
+    <div class="title-section">
+        <div class="poem-title">聲聲慢 · 尋尋覓覓</div>
+        <div class="sub">〔宋〕李清照 · 千古第一才女 | 婉約愁宗</div>
+    </div>
+
+    <!-- 原文板块 -->
+    <div class="original-poem">
+        <div class="stanza"><strong>尋尋覓覓，冷冷清清，</strong></div>
+        <div class="stanza"><strong>淒淒慘慘戚戚。</strong></div>
+        <div class="stanza">乍暖還寒時候，最難將息。</div>
+        <div class="stanza">三杯兩盞淡酒，怎敵他、晚來風急！</div>
+        <div class="stanza">雁過也，正傷心，卻是舊時相識。</div>
+        <div class="stanza" style="margin-top: 12px;">滿地黃花堆積，憔悴損，如今有誰堪摘？</div>
+        <div class="stanza">守著窗兒，獨自怎生得黑！</div>
+        <div class="stanza">梧桐更兼細雨，到黃昏、點點滴滴。</div>
+        <div class="stanza">這次第，怎一個愁字了得！</div>
+    </div>
+
+    <!-- 作者介绍 -->
+    <h2>📜 作者介紹 · 易安居士</h2>
+    <div class="author-card">
+        <div class="intro-text">
+            <p><span class="bio-highlight">李清照</span>（1084年－約1155年），號易安居士，齊州章丘（今山東濟南）人。宋代婉約派代表詞人，被譽為<span class="highlight-term">「千古第一才女」</span>。</p>
+            <p style="margin-top: 0.6rem;">✨ <strong>生平概略</strong>：出身書香門第，父親李格非為蘇軾門生，母親為狀元王拱辰孫女。18歲嫁與太學生趙明誠，夫婦志趣相投，共研金石書畫。1127年「靖康之變」後南渡，1129年趙明誠病逝，晚年孤身漂泊於杭州、越州、金華一帶，在淒苦中度過後半生。</p>
+        </div>
+    </div>
+    <div class="timeline">
+        <span>📌 創作分期</span> ：<strong>前期</strong> —— 悠閒生活、閨情相思，風格清新明快（如《如夢令》《一剪梅》）；<strong>後期</strong> —— 悲嘆身世、懷鄉憶舊，風格沉鬱淒婉。<br>
+        《聲聲慢》正是其晚期顛峰之作，凝聚國破、家亡、夫逝、文物喪失之痛。
+    </div>
+
+    <!-- 作品赏析 整合讲义核心信息 -->
+    <h2>🍂 作品賞析 · 愁情絕唱</h2>
+    
+    <div class="appreciation-block">
+        <h3>🖌️ 一、創作背景</h3>
+        <p>此詞作於李清照南渡之後，金兵入侵，流寓江南。詞人歷經國破、家亡、夫死、文物流散，晚年孤苦無依。全詞通過殘秋景色的描寫，抒發了無法排解的孤寂與濃愁，字字血淚。</p>
+    </div>
+
+    <div class="appreciation-block">
+        <h3>🎋 二、藝術特色</h3>
+        <ul class="feature-list">
+            <li><strong>開創性的疊字運用</strong> — 開篇「尋尋覓覓，冷冷清清，淒淒慘慘戚戚」連用七組疊字（十四字），被推為「空前絕後」奇筆。<br>
+            <span class="highlight-term">尋尋覓覓</span>（動作：若有所失）→ <span class="highlight-term">冷冷清清</span>（環境：空寂寥落）→ <span class="highlight-term">淒淒慘慘戚戚</span>（心境：悲涼愁腸）。三層遞進，齒舌音反覆吟誦，如泣如訴，音樂性與情感張力完美統一。</li>
+            <li><strong>獨特意象選擇</strong> — 所有意象皆為「愁」服務：<br>
+            · <strong>淡酒</strong>：「三杯兩盞淡酒，怎敵他、晚來風急」——酒淡愁濃，難禦寒難消愁。<br>
+            · <strong>過雁</strong>：「雁過也，正傷心，卻是舊時相識」——北雁南飛，觸發故國之思與亡夫之痛。<br>
+            · <strong>黃花</strong>：「滿地黃花堆積，憔悴損」——菊花凋零，自喻容顏憔悴、身世飄零。<br>
+            · <strong>梧桐細雨</strong>：「梧桐更兼細雨，到黃昏、點點滴滴」——以聲襯寂，雨打梧桐聲聲敲擊心扉，愁苦綿延不絕。</li>
+            <li><strong>精巧的結構安排</strong> — 全詞以時間為序，從清晨「尋尋覓覓」至黃昏「點點滴滴」，完整刻畫詞人一整天愁苦心態。結尾「這次第，怎一個愁字了得」以反問收束，化繁為簡 —— 萬千心事絕非一「愁」字可概括，言有盡而意無窮。</li>
+        </ul>
+    </div>
+
+    <div class="appreciation-block">
+        <h3>📖 三、名家點評與文學地位</h3>
+        <p>✓ 開篇十四疊字，被公認「前人未曾有過，後人亦難以模仿」<br>
+        ✓ 全詞一字一淚，風格深沉哀婉，極富藝術感染力，堪稱「婉約詞正宗」<br>
+        ✓ 代表李清照晚期創作最高成就，中國文學史上書寫「愁」情的巔峰之作</p>
+    </div>
+
+    <!-- 整合原讲义精华：深化赏析 -->
+    <div class="quote-comment">
+        <p>🎵 「尋尋覓覓，冷冷清清，淒淒慘慘戚戚」—— 首句連用七組疊字，歷代詞論家奉為奇筆。由動作至環境，由環境至心境，層層透骨，將無邊愁苦錘煉為天籟節奏。全篇淡酒、歸雁、黃花、梧桐細雨，意象連綿，最終收束於「怎一個愁字了得」，把國破家亡、孤苦飄零的複雜傷痛濃縮為千古絕唱。</p>
+        <div class="master-comment">🔖 —— 後世評曰：此詞以尋常言語寫不盡哀戚，一字一淚，卻神韻超然，爲婉約派不可逾越之高峰。</div>
+    </div>
+    
+    <!-- 细处解析 印证明晰 来自讲义整体 -->
+    <div style="background: #fffae9; padding: 0.8rem 1.8rem; border-radius: 24px; margin: 1rem 0;">
+        <p style="font-size: 0.95rem; margin: 0.3rem 0;">🔍 <strong>賞析細微之處</strong>：〈聲聲慢〉中「乍暖還寒時候，最難將息」不僅指天氣，更暗喻人生動盪與心境寒涼；「獨自怎生得黑」將孤獨感長夜壓縮為晝夜煎熬；結尾「這次第」概括眼前層疊愁緒，最終迸發「怎一個愁字了得」—— 一個「愁」字遠不足以道盡心靈創傷，比直抒悲痛更為沉鬱動人。</p>
+        <p style="font-size: 0.95rem; margin-top: 0.6rem;">📚 與前期作品比較：前期〈一剪梅〉「此情無計可消除，才下眉頭，卻上心頭」尚屬纏綿相思；而〈聲聲慢〉中愁思卻已浸入骨血，涵蓋家國之哀與生命孤絕，藝術境界更加雄深。</p>
+    </div>
+
+    <!-- 总结性陈述 强化整体理解 -->
+    <div style="margin-top: 2rem; border-top: 2px dotted #e4cfb0; padding-top: 1rem; text-align: center;">
+        <p style="font-size: 1rem; font-weight: 450;">✍️ 《聲聲慢》以連環疊字破空而來，以淡酒、過雁、黃花、梧桐細雨營造悲涼意境，</p>
+        <p style="font-size: 1rem; font-weight: 450;">以「怎一個愁字了得」收束無盡傷痛，千年來被視為寫「愁」之極致，感動無數讀者。</p>
+        <p style="margin-top: 0.6rem; font-size: 0.9rem;">—— 完整課堂講義整合 · 李清照與宋代婉約詞的永恆經典 ——</p>
+    </div>
+
+    <footer>
+        📖 依據古典文學講義編纂 | 原文依據《全宋詞》 | 傳承詩詞雅韻
+    </footer>
+</div>
+</body>
+</html>
