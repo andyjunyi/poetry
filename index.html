@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>詩詞智能文庫 · 古韻閱讀</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #e2d9cd; font-family: 'Segoe UI', '微軟正黑體', 'KaiTi', '華文楷書', serif; padding: 1.5rem; }
+        .app-wrapper { max-width: 1400px; margin: 0 auto; background: #fffdf7; border-radius: 2rem; overflow: hidden; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2); }
+        
+        /* 頁首 */
+        .header { background: #2d241b; color: #f2e5d2; padding: 1.2rem 2rem; }
+        .header h1 { font-size: 1.8rem; letter-spacing: 2px; font-weight: 500; }
+        
+        /* 工具列 */
+        .toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 0.8rem 1.8rem; gap: 12px; background: #fefaf2; border-top: 1px solid #e8dbc2; border-bottom: 1px solid #e8dbc2; }
+        .search-area { display: flex; gap: 0.5rem; flex: 2; flex-wrap: wrap; }
+        .search-area input { flex: 2; padding: 0.5rem 1rem; border-radius: 60px; border: 1px solid #cfb889; background: white; font-family: inherit; }
+        .search-area select, .search-area button { padding: 0.5rem 1rem; border-radius: 60px; border: none; background: #e5d5bc; cursor: pointer; font-family: inherit; }
+        .search-area button { background: #9b7b58; color: white; }
+        .work-count { background: #e9ddcc; padding: 0.3rem 1rem; border-radius: 30px; font-size: 0.85rem; }
+        .btn-add-work { background: #7b583c; color: white; padding: 0.5rem 1.2rem; border-radius: 40px; text-decoration: none; font-size: 0.9rem; font-weight: bold; transition: 0.2s; white-space: nowrap; }
+        .btn-add-work:hover { background: #5f3f28; }
+        
+        /* 左右面板 */
+        .dual-panel { display: flex; flex-wrap: wrap; }
+        .sidebar { flex: 1.2; min-width: 270px; background: #fef9f0; padding: 1.2rem; border-right: 1px solid #e7dcc8; }
+        .sidebar h3 { border-left: 5px solid #b47c44; padding-left: 12px; margin-bottom: 1rem; color: #4a341d; }
+        .work-list { list-style: none; max-height: 550px; overflow-y: auto; }
+        .work-list li { padding: 0.7rem 0.8rem; border-bottom: 1px dashed #e2cfb0; cursor: pointer; border-radius: 12px; transition: all 0.1s; display: flex; align-items: center; justify-content: space-between; }
+        .work-list li:hover { background: #eadfcb; transform: translateX(4px); }
+        .active-work { background: #e5d7c0; border-left: 4px solid #aa703e; }
+        .work-title { font-weight: 600; font-size: 1rem; }
+        .work-author { font-size: 0.7rem; color: #876e4a; margin-top: 3px; }
+        
+        /* ========= 作品正文區塊：古詩氛圍優化 ========= */
+        .content-area { flex: 3; padding: 2rem 2rem; background: #fefaf3; }
+        .detail-card { animation: fade 0.25s ease; }
+        @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 作品標題區 */
+        .poem-header {
+            border-bottom: 2px solid #dac29c;
+            padding-bottom: 0.8rem;
+            margin-bottom: 1.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+        .poem-title-main {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #4f321b;
+            letter-spacing: 3px;
+            font-family: '華文楷書', 'KaiTi', 'Georgia', serif;
+            text-shadow: 1px 1px 0 rgba(180, 130, 70, 0.15);
+        }
+        .poem-author-main {
+            font-size: 1rem;
+            color: #8f6b42;
+            font-style: italic;
+            background: #f2e9dd;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+        }
+        
+        /* ★ 詩詞正文區：更大字距、寬鬆行距、古雅字體 ★ */
+        .poem-block {
+            background: #fffaf0;
+            padding: 2rem 2.2rem;
+            border-radius: 28px;
+            border-left: 6px solid #bc8b58;
+            border-right: 1px solid #f0e2cf;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
+            margin: 1.5rem 0;
+            /* 古詩閱讀專屬設定 */
+            font-family: '華文楷書', 'KaiTi', 'Georgia', 'Times New Roman', serif;
+            font-size: 1.35rem;
+            line-height: 2.2;          /* 寬鬆行距，舒適閱讀 */
+            letter-spacing: 0.03em;    /* 微微字距，更有古典韻味 */
+            white-space: pre-line;
+            word-break: break-word;
+            color: #2b2a27;
+            text-align: left;
+            font-weight: normal;
+        }
+        
+        /* 讓詞句換行更自然，段落間距增加 */
+        .poem-block br {
+            display: block;
+            margin: 0.4rem 0;
+            content: "";
+        }
+        
+        /* 作者簡介區塊 */
+        .bio-block {
+            background: #f0f7f3;
+            padding: 1.2rem 1.8rem;
+            border-radius: 28px;
+            margin-bottom: 1.5rem;
+            border: 1px solid #c0d9cc;
+            font-size: 0.95rem;
+            line-height: 1.75;
+            color: #2c3d35;
+        }
+        .bio-block strong {
+            font-size: 1rem;
+            color: #3a6b55;
+            display: inline-block;
+            border-left: 3px solid #6aaa88;
+            padding-left: 10px;
+            margin-bottom: 0.6rem;
+        }
+
+        /* 創作背景區塊 */
+        .background-block {
+            background: #f5f2ed;
+            padding: 1.2rem 1.8rem;
+            border-radius: 28px;
+            margin-top: 1.5rem;
+            border: 1px solid #ddd3c0;
+            font-size: 0.95rem;
+            line-height: 1.75;
+            color: #3a3025;
+        }
+        .background-block strong {
+            font-size: 1rem;
+            color: #6b5035;
+            display: inline-block;
+            border-left: 3px solid #a08060;
+            padding-left: 10px;
+            margin-bottom: 0.6rem;
+        }
+
+        /* 賞析區塊保留清晰但稍帶古風 */
+        .analysis-block {
+            background: #fef7eb;
+            padding: 1.3rem 1.8rem;
+            border-radius: 28px;
+            margin-top: 1.8rem;
+            border: 1px solid #eedfc6;
+            font-size: 0.98rem;
+            line-height: 1.7;
+            color: #3f3324;
+        }
+        .analysis-block strong {
+            font-size: 1.05rem;
+            color: #7b5a3a;
+            display: inline-block;
+            border-left: 3px solid #bc8b58;
+            padding-left: 10px;
+            margin-bottom: 0.7rem;
+        }
+        
+        /* 小提示 */
+        .poem-note {
+            margin-top: 1rem;
+            font-size: 0.7rem;
+            color: #b2916b;
+            text-align: right;
+            border-top: 1px dashed #eadbc2;
+            padding-top: 0.8rem;
+        }
+        
+        footer { text-align: center; background: #efe3d2; padding: 0.8rem; font-size: 0.7rem; color: #5c4630; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-card { background: #fffaf0; max-width: 400px; width: 90%; padding: 1.8rem; border-radius: 32px; text-align: center; font-family: 'Segoe UI', 'KaiTi', serif; }
+        button { cursor: pointer; transition: 0.1s; }
+
+        /* 管理按鈕（正文區） */
+        .action-btns { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-top: 0.3rem; }
+        .btn-manage { padding: 0.3rem 0.9rem; border-radius: 30px; border: none; font-size: 0.78rem; font-weight: bold; cursor: pointer; transition: 0.2s; letter-spacing: 0.5px; }
+        .btn-edit-work { background: #6a8fa8; color: white; }
+        .btn-edit-work:hover { background: #4f7290; transform: scale(0.97); }
+        .btn-delete-work { background: #c25a4a; color: white; }
+        .btn-delete-work:hover { background: #9e3d30; transform: scale(0.97); }
+
+        /* 側邊欄刪除圖示 */
+        .del-btn { opacity: 0; background: none; border: none; color: #c08070; font-size: 0.95rem; padding: 0.2rem 0.45rem; border-radius: 8px; transition: opacity 0.15s, background 0.15s; cursor: pointer; flex-shrink: 0; }
+        .work-list li:hover .del-btn { opacity: 1; }
+        .del-btn:hover { background: #fde8e8; color: #c25a4a; }
+
+        /* 底部 Toast 通知 */
+        .toast-bar { display: none; position: fixed; bottom: 1.8rem; left: 50%; transform: translateX(-50%); background: #2d241b; color: #f2e5d2; padding: 0.75rem 2rem; border-radius: 40px; font-size: 0.9rem; z-index: 2000; box-shadow: 0 8px 24px rgba(0,0,0,0.25); white-space: nowrap; }
+        .toast-bar.show { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity:0; transform: translateX(-50%) translateY(16px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        
+        @media (max-width: 700px) {
+            .poem-block { font-size: 1.1rem; line-height: 1.9; padding: 1rem 1.2rem; }
+            .poem-title-main { font-size: 1.5rem; }
+            .content-area { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-wrapper">
+    <div class="header"><h1>📖 詩詞智能文庫 · 古韻閱讀</h1></div>
+    <div class="toolbar">
+        <div class="search-area">
+            <input type="text" id="searchKeyword" placeholder="搜尋作品名稱或作者...">
+            <select id="searchMode"><option value="all">綜合</option><option value="title">按名稱</option><option value="author">按作者</option></select>
+            <button id="searchBtn">🔍 檢索</button>
+            <button id="resetBtn">⟳ 重置</button>
+        </div>
+        <div class="work-count">📚 作品數: <span id="workCount">0</span></div>
+        <a href="add.html" target="_blank" class="btn-add-work">✨ 新增作品</a>
+    </div>
+    <div class="dual-panel">
+        <div class="sidebar"><h3>📜 作品目錄</h3><ul class="work-list" id="workList"><li>載入中...</li></ul></div>
+        <div class="content-area" id="contentArea"><div style="text-align:center; padding:3rem; color:#aa8b64;">✨ 請選擇作品，或使用智能貼上新增詩詞<br>⋆ 正文區採用古雅字體、寬鬆行距 ⋆</div></div>
+    </div>
+    <footer>⚡ 智能解析引擎 · 自動提取作者／作品／賞析｜正文區加大行距字距，仿古書卷氣息</footer>
+</div>
+<!-- 刪除確認 -->
+<div id="deleteModal" class="modal">
+    <div class="modal-card">
+        <p style="font-size:1.2rem; margin-bottom:0.4rem;">🗑️ 確認刪除</p>
+        <p style="color:#4a341d; font-size:1rem; margin:0.6rem 0;">《<span id="deleteWorkTitle" style="font-weight:bold;"></span>》</p>
+        <p style="color:#aaa; font-size:0.78rem; margin-bottom:1.2rem;">刪除後無法復原</p>
+        <div style="display:flex; gap:0.8rem; justify-content:center;">
+            <button id="cancelDeleteBtn" style="padding:0.5rem 1.3rem; background:#e5d5bc; border:none; border-radius:30px; font-family:inherit; font-size:0.9rem;">取消</button>
+            <button id="confirmDeleteBtn" style="padding:0.5rem 1.3rem; background:#c25a4a; color:white; border:none; border-radius:30px; font-family:inherit; font-size:0.9rem; font-weight:bold;">確認刪除</button>
+        </div>
+    </div>
+</div>
+<div class="toast-bar" id="toastBar"></div>
+
+<script>
+    const DB_KEY = 'poetryDatabase';
+    const DEFAULT_DB = [
+        { id: "p1", title: "聲聲慢·秋情", author: "李清照", dynasty: "南宋",
+          biography: "號易安居士，齊州章丘（今山東章丘）人。為宋代著名女詞人，婉約詞派代表。出生於書香門第，早期生活優渥，與夫趙明誠共同致力於金石書畫的蒐集與考證。靖康之難後，隨著南渡難民流亡南方，不久丈夫病逝，下半生在孤苦與漂泊中度過。其作品以南渡為界，前期多寫悠閒生活與相思之情，後期則轉向對國破家亡的深沉哀痛。",
+          content: `尋尋覓覓，冷冷清清，淒淒慘慘戚戚。乍暖還寒時候，最難將息。三杯兩盞淡酒，怎敵他、晚來風急！雁過也，正傷心，卻是舊時相識。\n滿地黃花堆積，憔悴損，如今有誰堪摘？守著窗兒，獨自怎生得黑！梧桐更兼細雨，到黃昏、點點滴滴。這次第，怎一個愁字了得！`,
+          background: "本詞作於李清照晚年南渡之後。當時金兵入據中原，汴京失陷，李清照與丈夫趙明誠南逃。不久趙明誠病逝，李清照隻身流寓於江浙一帶。此時她不僅失去了親人與摯愛，更面臨國破家亡、文物散失的境遇。在極度的孤寂與悲憤中，她於一個深秋的傍晚，感受著清冷的氣候與淒涼的身世，寫下了這首被譽為「千古絕唱」的秋詞。",
+          analysis: `此詞以卓越的藝術技巧展現了詞人極度的孤獨與愁苦。開篇連用十四個疊字「尋尋覓覓，冷冷清清，淒淒慘慘戚戚」，由外在動作轉入內在心境，層層遞進地描繪出心中若有所失、若有所求卻終歸落空的空虛感，節奏感極強，展現了音樂美與情感美的結合。\n詞中借景抒情，選取的意象如「淡酒」、「疾風」、「過雁」、「黃花」、「梧桐細雨」無不帶有濃厚的愁意。作者見「雁過」而傷心，是因為大雁曾為她傳過書信，而今物是人非；看「滿地黃花」卻不願摘取，實是感嘆自己容顏凋零、孤芳自賞的處境。結尾處，「梧桐更兼細雨，到黃昏、點點滴滴」將愁思具象化，細雨打在梧桐上的聲音，聲聲都撞擊著詞人脆弱的心靈。最終以「怎一個愁字了得」收束全篇，直抒胸臆，說明此時的痛苦早已超出了「愁」的語意範疇，情感沉痛，意境深遠。`
+        },
+        { id: "p2", title: "如夢令·昨夜雨疏風驟", author: "李清照", dynasty: "北宋",
+          biography: "號易安居士，齊州章丘（今山東章丘）人。為宋代著名女詞人，婉約詞派代表。出生於書香門第，早期生活優渥，與夫趙明誠共同致力於金石書畫的蒐集與考證。靖康之難後，隨著南渡難民流亡南方，不久丈夫病逝，下半生在孤苦與漂泊中度過。其作品以南渡為界，前期多寫悠閒生活與相思之情，後期則轉向對國破家亡的深沉哀痛。",
+          content: `昨夜雨疏風驟，濃睡不消殘酒。\n試問卷簾人，卻道海棠依舊。\n知否，知否？應是綠肥紅瘦。`,
+          background: "",
+          analysis: `此詞為李清照前期名篇，借宿酒醒後詢問花事，委婉惜春。「綠肥紅瘦」四字極煉如不煉，以色彩形態寫盡春光消逝之嘆，含蓄蘊藉，千古傳誦。全詞輕靈新巧，卻寄寓對美好事物易逝的深刻感懷。`
+        }
+    ];
+
+    function loadDB() {
+        try {
+            const saved = localStorage.getItem(DB_KEY);
+            if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        localStorage.setItem(DB_KEY, JSON.stringify(DEFAULT_DB));
+        return DEFAULT_DB;
+    }
+
+    let poetryDatabase = loadDB();
+    let currentSelectedId = poetryDatabase.length ? poetryDatabase[0].id : null;
+
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ return m==='&'?'&amp;': m==='<'?'&lt;':'&gt;';}); }
+
+    function renderWorkList(works) {
+        const container = document.getElementById('workList');
+        if(!works.length){ container.innerHTML='<li style="justify-content:center;">📭 暫無作品</li>'; return; }
+        container.innerHTML = '';
+        works.forEach(work => {
+            const li = document.createElement('li');
+            li.className = currentSelectedId === work.id ? 'active-work' : '';
+            li.innerHTML = `
+                <div style="flex:1;min-width:0;">
+                    <div class="work-title">📖 ${escapeHtml(work.title)}</div>
+                    <div class="work-author">✍️ ${work.dynasty ? `〔${escapeHtml(work.dynasty)}〕` : ''}${escapeHtml(work.author)}</div>
+                </div>
+                <button class="del-btn" title="刪除">🗑</button>`;
+            li.querySelector('.del-btn').onclick = (e) => { e.stopPropagation(); confirmDelete(work.id); };
+            li.onclick = () => { currentSelectedId = work.id; renderWorkList(works); showDetail(work.id); };
+            container.appendChild(li);
+        });
+        document.getElementById('workCount').innerText = poetryDatabase.length;
+    }
+
+    function showDetail(id) {
+        const work = poetryDatabase.find(w=>w.id===id);
+        if(!work) return;
+        const fmt = s => escapeHtml(s || '').replace(/\n/g, '<br>');
+        document.getElementById('contentArea').innerHTML = `
+            <div class="detail-card">
+                <div class="poem-header">
+                    <span class="poem-title-main">${escapeHtml(work.title)}</span>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem;">
+                        <span class="poem-author-main">${work.dynasty ? `〔${escapeHtml(work.dynasty)}〕` : ''}${escapeHtml(work.author)}</span>
+                        <div class="action-btns">
+                            <button class="btn-manage btn-edit-work" id="editBtn">✏️ 編輯</button>
+                            <button class="btn-manage btn-delete-work" id="deleteBtn">🗑️ 刪除</button>
+                        </div>
+                    </div>
+                </div>
+                ${work.biography ? `<div class="bio-block"><strong>✍️ 作者簡介</strong><div style="margin-top:0.5rem;">${fmt(work.biography)}</div></div>` : ''}
+                <div class="poem-block">${fmt(work.content)}</div>
+                ${work.background ? `<div class="background-block"><strong>📖 創作背景</strong><div style="margin-top:0.5rem;">${fmt(work.background)}</div></div>` : ''}
+                <div class="analysis-block">
+                    <strong>📜 作品賞析 · 意蘊品讀</strong>
+                    <div style="margin-top:0.5rem;">${fmt(work.analysis)}</div>
+                </div>
+                <div class="poem-note">✍️ ｜ 字裡行間，古韻悠然 ｜ 行距疏朗，宜品宜誦</div>
+            </div>`;
+        document.getElementById('editBtn').onclick = () => editWork(id);
+        document.getElementById('deleteBtn').onclick = () => confirmDelete(id);
+    }
+
+    function resetAndDisplay() {
+        poetryDatabase = loadDB();
+        document.getElementById('searchKeyword').value = '';
+        renderWorkList([...poetryDatabase]);
+        if(poetryDatabase.length) {
+            if(!poetryDatabase.find(w=>w.id===currentSelectedId)) currentSelectedId = poetryDatabase[poetryDatabase.length-1].id;
+            showDetail(currentSelectedId);
+        } else {
+            document.getElementById('contentArea').innerHTML = '<div style="text-align:center; padding:2rem;">✨ 暫無作品，請點選「新增作品」</div>';
+        }
+    }
+
+    function performSearch() {
+        let kw = document.getElementById('searchKeyword').value.trim().toLowerCase();
+        let mode = document.getElementById('searchMode').value;
+        if(!kw) { renderWorkList([...poetryDatabase]); return; }
+        let filtered = poetryDatabase.filter(w => {
+            if(mode === 'title') return w.title.toLowerCase().includes(kw);
+            if(mode === 'author') return w.author.toLowerCase().includes(kw);
+            return w.title.toLowerCase().includes(kw) || w.author.toLowerCase().includes(kw);
+        });
+        renderWorkList(filtered);
+        if(filtered.length) showDetail(filtered[0].id);
+        else document.getElementById('contentArea').innerHTML = '<div style="text-align:center; padding:2rem; color:#9b7b58;">🔍 查無相關作品，請嘗試其他關鍵字</div>';
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+        const el = document.getElementById('toastBar');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+    }
+
+    function confirmDelete(id) {
+        const work = poetryDatabase.find(w => w.id === id);
+        if(!work) return;
+        document.getElementById('deleteWorkTitle').textContent = work.title;
+        const modal = document.getElementById('deleteModal');
+        modal.style.display = 'flex';
+        document.getElementById('confirmDeleteBtn').onclick = () => {
+            modal.style.display = 'none';
+            deleteWork(id);
+        };
+        document.getElementById('cancelDeleteBtn').onclick = () => { modal.style.display = 'none'; };
+        modal.onclick = (e) => { if(e.target === modal) modal.style.display = 'none'; };
+    }
+
+    function deleteWork(id) {
+        const db = loadDB();
+        const idx = db.findIndex(w => w.id === id);
+        if(idx === -1) return;
+        const deletedTitle = db[idx].title;
+        db.splice(idx, 1);
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+        poetryDatabase = db;
+        if(currentSelectedId === id) {
+            currentSelectedId = db.length ? db[Math.min(idx, db.length - 1)].id : null;
+        }
+        renderWorkList([...poetryDatabase]);
+        if(currentSelectedId) showDetail(currentSelectedId);
+        else document.getElementById('contentArea').innerHTML = '<div style="text-align:center; padding:3rem; color:#aa8b64;">✨ 暫無作品，請點選「新增作品」</div>';
+        showToast(`已刪除《${deletedTitle}》`);
+    }
+
+    function editWork(id) {
+        window.open(`add.html?edit=${encodeURIComponent(id)}`, '_blank');
+    }
+
+    // 監聽 localStorage 變化（add.html 新增或編輯後自動觸發）
+    window.addEventListener('storage', (e) => {
+        if(e.key !== DB_KEY) return;
+        const prevLen = poetryDatabase.length;
+        poetryDatabase = loadDB();
+        // 新增時跳至最新作品；編輯時留在當前選擇
+        if(poetryDatabase.length > prevLen) {
+            currentSelectedId = poetryDatabase[poetryDatabase.length - 1].id;
+        }
+        renderWorkList([...poetryDatabase]);
+        if(currentSelectedId) showDetail(currentSelectedId);
+    });
+
+    document.getElementById('searchBtn').onclick = performSearch;
+    document.getElementById('resetBtn').onclick = resetAndDisplay;
+    document.getElementById('searchKeyword').onkeypress = (e) => { if(e.key === 'Enter') performSearch(); };
+
+    resetAndDisplay();
+</script>
+</body>
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增詩詞 · 智能分析</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #e2d9cd; font-family: 'Segoe UI', '微軟正黑體', 'KaiTi', '華文楷書', serif; padding: 1.5rem; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+
+        .page-wrapper { width: 100%; max-width: 760px; }
+
+        .header { background: #2d241b; color: #f2e5d2; padding: 1.2rem 2rem; border-radius: 1.5rem 1.5rem 0 0; display: flex; align-items: center; justify-content: space-between; }
+        .header h1 { font-size: 1.4rem; letter-spacing: 2px; font-weight: 500; }
+        .back-link { color: #e8cfaa; text-decoration: none; font-size: 0.85rem; border: 1px solid #e8cfaa; padding: 0.3rem 0.9rem; border-radius: 30px; transition: 0.2s; }
+        .back-link:hover { background: rgba(255,255,255,0.1); }
+
+        .card { background: #fffdf7; padding: 2rem; border-radius: 0 0 1.5rem 1.5rem; box-shadow: 0 20px 35px -12px rgba(0,0,0,0.2); }
+
+        .section-title { font-size: 1rem; color: #4a341d; font-weight: 600; border-left: 4px solid #b47c44; padding-left: 10px; margin-bottom: 0.8rem; }
+
+        .input-block { background: #f8f2e6; border-radius: 24px; padding: 1.2rem; border: 1px solid #e2cfac; margin-bottom: 1.5rem; }
+        textarea { width: 100%; padding: 1rem; border-radius: 18px; border: 1px solid #ddcaa5; font-family: monospace; background: #fffef8; font-size: 0.9rem; resize: vertical; outline: none; transition: border-color 0.2s; }
+        textarea:focus { border-color: #b47c44; }
+
+        .actions { display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 0.8rem; flex-wrap: wrap; }
+        .btn-parse { background: #7b583c; color: white; padding: 0.65rem 1.6rem; border-radius: 40px; border: none; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: 0.2s; }
+        .btn-parse:hover { background: #5f3f28; transform: scale(0.97); }
+        .btn-clear { background: #d5c9b8; color: #4a341d; padding: 0.65rem 1.2rem; border-radius: 40px; border: none; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+        .btn-clear:hover { background: #c5b49f; }
+
+        /* 解析結果預覽 */
+        .preview-block { display: none; background: #fef9f0; border: 1px solid #e2cfac; border-radius: 24px; padding: 1.5rem; margin-bottom: 1.5rem; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .preview-block.show { display: block; }
+        .field-row { margin-bottom: 1rem; }
+        .field-label { font-size: 0.78rem; color: #7b5a3a; font-weight: 600; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 1px; }
+        .field-input { width: 100%; padding: 0.6rem 1rem; border-radius: 14px; border: 1px solid #d9c9ac; background: #fffef8; font-family: inherit; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+        .field-input:focus { border-color: #b47c44; }
+        textarea.field-input { resize: vertical; font-family: '華文楷書', 'KaiTi', serif; line-height: 1.8; font-size: 1rem; }
+
+        .confirm-actions { display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 1rem; flex-wrap: wrap; }
+        .btn-confirm { background: #6a9b6a; color: white; padding: 0.65rem 1.6rem; border-radius: 40px; border: none; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: 0.2s; }
+        .btn-confirm:hover { background: #4f7a4f; transform: scale(0.97); }
+        .btn-reparse { background: #9b7b58; color: white; padding: 0.65rem 1.2rem; border-radius: 40px; border: none; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+        .btn-reparse:hover { background: #7a5c3e; }
+
+        /* 整合面板 */
+        .merge-block { display: none; background: #fff8ee; border: 2px solid #d4a055; border-radius: 24px; padding: 1.5rem; margin-bottom: 1.5rem; animation: fadeIn 0.25s ease; }
+        .merge-block.show { display: block; }
+        .merge-warning { display: flex; align-items: center; gap: 0.6rem; background: #fef0d4; border-radius: 14px; padding: 0.8rem 1.2rem; margin-bottom: 1.2rem; color: #7a4e10; font-weight: 600; font-size: 0.95rem; }
+        .merge-cols { display: flex; gap: 1rem; margin-bottom: 1.2rem; }
+        .merge-col { flex: 1; min-width: 0; }
+        .merge-col-title { font-size: 0.75rem; font-weight: 700; color: #7b5a3a; letter-spacing: 1px; margin-bottom: 0.4rem; padding: 0.25rem 0.7rem; border-radius: 20px; display: inline-block; }
+        .merge-col-title.old { background: #e8dfd2; color: #5c3d1e; }
+        .merge-col-title.new { background: #d4ebd4; color: #2a5a2a; }
+        .merge-text { background: #fffef8; border: 1px solid #e2cfac; border-radius: 14px; padding: 0.8rem 1rem; font-size: 0.85rem; line-height: 1.7; white-space: pre-wrap; max-height: 160px; overflow-y: auto; color: #3a2a1a; font-family: '華文楷書', 'KaiTi', serif; }
+        .merge-text.old-text { border-color: #d4b88a; }
+        .merge-text.new-text { border-color: #8fc48f; }
+        .merge-actions { display: flex; gap: 0.7rem; justify-content: flex-end; flex-wrap: wrap; }
+        .btn-merge-replace { background: #c0522a; color: white; padding: 0.6rem 1.2rem; border-radius: 40px; border: none; cursor: pointer; font-size: 0.88rem; font-weight: bold; transition: 0.2s; }
+        .btn-merge-replace:hover { background: #9a3d1e; }
+        .btn-merge-combine { background: #4a7f8f; color: white; padding: 0.6rem 1.2rem; border-radius: 40px; border: none; cursor: pointer; font-size: 0.88rem; font-weight: bold; transition: 0.2s; }
+        .btn-merge-combine:hover { background: #346573; }
+        .btn-merge-new { background: #6a9b6a; color: white; padding: 0.6rem 1.2rem; border-radius: 40px; border: none; cursor: pointer; font-size: 0.88rem; font-weight: bold; transition: 0.2s; }
+        .btn-merge-new:hover { background: #4f7a4f; }
+        .btn-merge-cancel { background: #d5c9b8; color: #4a341d; padding: 0.6rem 1rem; border-radius: 40px; border: none; cursor: pointer; font-size: 0.88rem; transition: 0.2s; }
+        .btn-merge-cancel:hover { background: #c5b49f; }
+        @media (max-width: 520px) { .merge-cols { flex-direction: column; } }
+
+        /* Toast */
+        .toast { display: none; position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: #2d241b; color: #f2e5d2; padding: 0.8rem 2rem; border-radius: 40px; font-size: 0.95rem; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.25); animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        .toast.show { display: block; }
+
+        .hint { font-size: 0.78rem; color: #a08060; margin-top: 0.5rem; line-height: 1.6; }
+
+        footer { text-align: center; padding: 1rem; font-size: 0.7rem; color: #5c4630; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+    <div class="header">
+        <h1 id="pageTitle">✨ 智能分析並新增詩詞</h1>
+        <a href="index.html" class="back-link">← 返回文庫</a>
+    </div>
+    <div class="card">
+        <div class="input-block" id="inputBlock">
+            <div class="section-title">貼上詩詞原文</div>
+            <textarea id="rawTextInput" rows="8" placeholder="直接貼上詩詞內容，系統自動識別標題、作者、正文、賞析…&#10;&#10;例如：&#10;如夢令·昨夜雨疏風驟&#10;〔宋〕李清照&#10;昨夜雨疏風驟，濃睡不消殘酒。試問卷簾人，卻道海棠依舊。知否，知否？應是綠肥紅瘦。&#10;賞析：此詞以「綠肥紅瘦」寫盡惜春之情……"></textarea>
+            <p class="hint">💡 支援自動提取：標題（含「·」或書名號）、作者（含朝代標記如〔宋〕）、正文、賞析</p>
+            <div class="actions">
+                <button class="btn-clear" id="clearBtn">清除</button>
+                <button class="btn-parse" id="parseBtn">🔍 智能分析</button>
+            </div>
+        </div>
+
+        <div class="preview-block" id="previewBlock">
+            <div class="section-title" id="previewTitle">確認並修改解析結果</div>
+            <div class="field-row">
+                <div class="field-label">標題</div>
+                <input type="text" class="field-input" id="editTitle">
+            </div>
+            <div class="field-row">
+                <div class="field-label">作者</div>
+                <input type="text" class="field-input" id="editAuthor">
+            </div>
+            <div class="field-row">
+                <div class="field-label">朝代</div>
+                <input type="text" class="field-input" id="editDynasty" placeholder="例：宋、唐、明（選填）">
+            </div>
+            <div class="field-row">
+                <div class="field-label">作者簡介</div>
+                <textarea class="field-input" id="editBiography" rows="3" placeholder="作者生平、字號、籍貫、風格等（選填）"></textarea>
+            </div>
+            <div class="field-row">
+                <div class="field-label">正文</div>
+                <textarea class="field-input" id="editContent" rows="6"></textarea>
+            </div>
+            <div class="field-row">
+                <div class="field-label">創作背景</div>
+                <textarea class="field-input" id="editBackground" rows="3" placeholder="作品創作時的歷史背景與脈絡（選填）"></textarea>
+            </div>
+            <div class="field-row">
+                <div class="field-label">賞析</div>
+                <textarea class="field-input" id="editAnalysis" rows="4"></textarea>
+            </div>
+            <div class="confirm-actions">
+                <button class="btn-reparse" id="reparseBtn" style="display:inline-block;">↩ 重新分析</button>
+                <button class="btn-confirm" id="confirmBtn">✅ 確認收錄</button>
+            </div>
+        </div>
+
+        <!-- 同名整合面板 -->
+        <div class="merge-block" id="mergeBlock">
+            <div class="merge-warning">⚠️ 偵測到同名作品，請選擇整合方式</div>
+            <div class="merge-cols">
+                <div class="merge-col">
+                    <div class="merge-col-title old">📚 現有記錄</div>
+                    <div class="merge-text old-text" id="mergeOldContent"></div>
+                    <div class="merge-text old-text" id="mergeOldAnalysis" style="margin-top:0.5rem; font-size:0.78rem;"></div>
+                </div>
+                <div class="merge-col">
+                    <div class="merge-col-title new">✨ 新增內容</div>
+                    <div class="merge-text new-text" id="mergeNewContent"></div>
+                    <div class="merge-text new-text" id="mergeNewAnalysis" style="margin-top:0.5rem; font-size:0.78rem;"></div>
+                </div>
+            </div>
+            <div class="merge-actions">
+                <button class="btn-merge-cancel" id="mergeCancelBtn">取消</button>
+                <button class="btn-merge-new" id="mergeNewBtn">另存新增</button>
+                <button class="btn-merge-combine" id="mergeCombineBtn">合併內容</button>
+                <button class="btn-merge-replace" id="mergeReplaceBtn">以新替換</button>
+            </div>
+        </div>
+    </div>
+    <footer>⚡ 智能解析引擎 · 自動提取作者／作品／賞析</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const DB_KEY = 'poetryDatabase';
+    const DEFAULT_DB = [
+        { id: "p1", title: "聲聲慢·秋情", author: "李清照", dynasty: "南宋",
+          biography: "號易安居士，齊州章丘（今山東章丘）人。為宋代著名女詞人，婉約詞派代表。出生於書香門第，早期生活優渥，與夫趙明誠共同致力於金石書畫的蒐集與考證。靖康之難後，隨著南渡難民流亡南方，不久丈夫病逝，下半生在孤苦與漂泊中度過。其作品以南渡為界，前期多寫悠閒生活與相思之情，後期則轉向對國破家亡的深沉哀痛。",
+          content: "尋尋覓覓，冷冷清清，淒淒慘慘戚戚。乍暖還寒時候，最難將息。三杯兩盞淡酒，怎敵他、晚來風急！雁過也，正傷心，卻是舊時相識。\n滿地黃花堆積，憔悴損，如今有誰堪摘？守著窗兒，獨自怎生得黑！梧桐更兼細雨，到黃昏、點點滴滴。這次第，怎一個愁字了得！",
+          background: "本詞作於李清照晚年南渡之後。當時金兵入據中原，汴京失陷，李清照與丈夫趙明誠南逃。不久趙明誠病逝，李清照隻身流寓於江浙一帶。此時她不僅失去了親人與摯愛，更面臨國破家亡、文物散失的境遇。在極度的孤寂與悲憤中，她於一個深秋的傍晚，感受著清冷的氣候與淒涼的身世，寫下了這首被譽為「千古絕唱」的秋詞。",
+          analysis: "此詞以卓越的藝術技巧展現了詞人極度的孤獨與愁苦。開篇連用十四個疊字「尋尋覓覓，冷冷清清，淒淒慘慘戚戚」，由外在動作轉入內在心境，層層遞進地描繪出心中若有所失、若有所求卻終歸落空的空虛感，節奏感極強，展現了音樂美與情感美的結合。\n詞中借景抒情，選取的意象如「淡酒」、「疾風」、「過雁」、「黃花」、「梧桐細雨」無不帶有濃厚的愁意。作者見「雁過」而傷心，是因為大雁曾為她傳過書信，而今物是人非；看「滿地黃花」卻不願摘取，實是感嘆自己容顏凋零、孤芳自賞的處境。結尾處，「梧桐更兼細雨，到黃昏、點點滴滴」將愁思具象化，細雨打在梧桐上的聲音，聲聲都撞擊著詞人脆弱的心靈。最終以「怎一個愁字了得」收束全篇，直抒胸臆，說明此時的痛苦早已超出了「愁」的語意範疇，情感沉痛，意境深遠。"
+        },
+        { id: "p2", title: "如夢令·昨夜雨疏風驟", author: "李清照", dynasty: "北宋",
+          biography: "號易安居士，齊州章丘（今山東章丘）人。為宋代著名女詞人，婉約詞派代表。出生於書香門第，早期生活優渥，與夫趙明誠共同致力於金石書畫的蒐集與考證。靖康之難後，隨著南渡難民流亡南方，不久丈夫病逝，下半生在孤苦與漂泊中度過。其作品以南渡為界，前期多寫悠閒生活與相思之情，後期則轉向對國破家亡的深沉哀痛。",
+          content: "昨夜雨疏風驟，濃睡不消殘酒。\n試問卷簾人，卻道海棠依舊。\n知否，知否？應是綠肥紅瘦。",
+          background: "",
+          analysis: "此詞為李清照前期名篇，借宿酒醒後詢問花事，委婉惜春。「綠肥紅瘦」四字極煉如不煉，以色彩形態寫盡春光消逝之嘆，含蓄蘊藉，千古傳誦。全詞輕靈新巧，卻寄寓對美好事物易逝的深刻感懷。"
+        }
+    ];
+
+    function loadDB() {
+        try {
+            const saved = localStorage.getItem(DB_KEY);
+            if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        const db = JSON.parse(JSON.stringify(DEFAULT_DB));
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+        return db;
+    }
+
+    function saveDB(db) {
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+    }
+
+    let toastTimer;
+    function showToast(msg, duration = 2500) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), duration);
+    }
+
+    function cleanMarkdown(text) {
+        // 移除 fenced code blocks（``` 或 ~~~）
+        text = text.replace(/(`{3,}|~{3,})[\s\S]*?\1/g, '');
+        // 移除 inline code
+        text = text.replace(/`[^`\n]+`/g, '');
+        // 移除 HTML 標籤
+        text = text.replace(/<[^>]+>/g, '');
+        // 移除圖片 ![alt](url)
+        text = text.replace(/!\[.*?\]\(.*?\)/g, '');
+        // 移除超連結 [text](url)，保留連結文字
+        text = text.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+        // 移除粗斜體（保留內文）：***、**、*、___、__、_
+        text = text.replace(/\*{3}([^*\n]+)\*{3}/g, '$1');
+        text = text.replace(/\*{2}([^*\n]+)\*{2}/g, '$1');
+        text = text.replace(/\*([^*\n]+)\*/g, '$1');
+        text = text.replace(/_{3}([^_\n]+)_{3}/g, '$1');
+        text = text.replace(/_{2}([^_\n]+)_{2}/g, '$1');
+        text = text.replace(/_([^_\n]+)_/g, '$1');
+        // 移除刪除線 ~~text~~
+        text = text.replace(/~~([^~\n]+)~~/g, '$1');
+
+        let lines = text.split(/\r?\n/);
+        lines = lines.map(line => {
+            let t = line.trim();
+            // 移除標題標記（# ## ###…）
+            t = t.replace(/^#{1,6}\s+/, '');
+            // 移除引用標記（> >> …）
+            t = t.replace(/^(>\s*)+/, '');
+            // 移除無序清單標記（- * +）
+            t = t.replace(/^[-*+]\s+/, '');
+            // 移除有序清單標記（1. 2) …）
+            t = t.replace(/^\d+[.)]\s+/, '');
+            return t;
+        });
+
+        // 移除純符號組成的裝飾行（橫線、星號、框線字元等）
+        lines = lines.filter(line =>
+            !/^[-=*_#~·•▪►▸▼◆◇○●□■※＊]{2,}$/.test(line) &&
+            !/^[─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬░▒▓█\s]{3,}$/.test(line)
+        );
+
+        // 合併連續空行（最多保留一個）
+        const cleaned = [];
+        let prevBlank = false;
+        for(const line of lines) {
+            const blank = line === '';
+            if(blank && prevBlank) continue;
+            cleaned.push(line);
+            prevBlank = blank;
+        }
+        return cleaned.join('\n').trim();
+    }
+
+    const DYNASTY_RE = /先秦|秦|漢|三國|魏|蜀|吳|晉|南北朝|隋|唐|五代|宋|元|明|清|近代|現代|民國/;
+
+    // 段落標題對應欄位（同時支援新舊兩種格式）
+    const HEADING_MAP = {
+        // 新格式：獨立欄位
+        '作者':         'author',
+        '作品朝代':     'dynasty',   '朝代':     'dynasty',
+        '作品名稱':     'title',     '作品題目': 'title',   '題目': 'title',
+        // 作者簡介
+        '作者簡介':     'biography', '作者介紹': 'biography',
+        // 全文
+        '作品全文':     'poem',      '全文':     'poem',    '作品原文': 'poem', '原文': 'poem',
+        // 創作背景
+        '作品創作背景': 'background','創作背景': 'background','作品背景': 'background','背景': 'background',
+        // 賞析
+        '作品賞析':     'analysis',  '賞析':     'analysis', '簡析':     'analysis', '文學賞析': 'analysis',
+    };
+
+    // 從簡介文字推測作者姓名與朝代（舊格式 fallback）
+    function extractAuthorDynastyFromBio(bio) {
+        let author = "", dynasty = "";
+        const nameM = bio.match(/^(\S{1,6})[（(]/);
+        if(nameM) author = nameM[1];
+        let dynM = bio.match(new RegExp(`(${DYNASTY_RE.source})(?:代|朝)`));
+        if(!dynM) dynM = bio.match(DYNASTY_RE);
+        if(dynM) dynasty = dynM[1] || dynM[0];
+        return { author, dynasty };
+    }
+
+    function smartParse(rawText) {
+        if(!rawText.trim()) return null;
+        rawText = cleanMarkdown(rawText);
+
+        const trimLines = s => s.split('\n').map(l => l.trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+        let r = { title: "未命名", author: "佚名", dynasty: "", biography: "", content: "", background: "", analysis: "" };
+
+        // ── 結構化解析：偵測 【段落標題】 ──
+        if(/【[^】]{1,20}】/.test(rawText)) {
+            const parts = rawText.split(/(【[^】]{1,20}】)/);
+            let curKey = null;
+            const sections = {};
+
+            for(const part of parts) {
+                const m = part.match(/^【([^】]{1,20})】$/);
+                if(m) {
+                    curKey = m[1].trim();
+                    sections[curKey] = '';
+                } else if(curKey !== null) {
+                    sections[curKey] += part;
+                }
+            }
+
+            for(const [heading, raw] of Object.entries(sections)) {
+                const field = HEADING_MAP[heading];
+                const text  = raw.trim();
+                if(!text || !field) continue;
+
+                if(field === 'author') {
+                    r.author = text;
+
+                } else if(field === 'dynasty') {
+                    r.dynasty = text;
+
+                } else if(field === 'title') {
+                    r.title = text;
+
+                } else if(field === 'biography') {
+                    r.biography = text;
+                    // 舊格式 fallback：若尚未透過 【作者】/【作品朝代】 取得，嘗試從簡介推測
+                    if(r.author === "佚名") {
+                        const { author, dynasty } = extractAuthorDynastyFromBio(text);
+                        if(author)           r.author  = author;
+                        if(!r.dynasty && dynasty) r.dynasty = dynasty;
+                    }
+
+                } else if(field === 'poem') {
+                    // 相容舊格式：若正文以 《標題》 開頭，提取標題
+                    const titleM = text.match(/^《([^》]+)》\s*/);
+                    if(titleM && r.title === "未命名") r.title = titleM[1];
+                    r.content = titleM ? text.slice(titleM[0].length).trim() : text;
+
+                } else if(field === 'background') {
+                    r.background = text;
+
+                } else if(field === 'analysis') {
+                    r.analysis = text;
+                }
+            }
+
+            if(r.title === "未命名" && r.author !== "佚名") r.title = "詩詞佳作";
+
+        } else {
+            // ── 非結構化解析（原有邏輯） ──
+            const lines = rawText.split(/\r?\n/);
+
+            // 標題
+            for(const line of lines) {
+                const t = line.trim();
+                if(t && (t.includes("·") || t.includes("《") || t.includes("【")) && r.title === "未命名") {
+                    r.title = t.replace(/[《》【】]/g, '').substring(0, 70); break;
+                }
+            }
+            if(r.title === "未命名" && lines[0]) r.title = lines[0].trim().substring(0, 60);
+            if(!r.title.trim()) r.title = "詩詞佳作";
+
+            // 作者與朝代
+            for(let i = 0; i < lines.length; i++) {
+                const t = lines[i].trim();
+                if(!t || t.length > 50) continue;
+                const m1 = t.match(/[〔\[（【]\s*([^〕\]）】]+?)\s*[〕\]）】]\s*(.+)/);
+                if(m1 && DYNASTY_RE.test(m1[1])) { r.dynasty = m1[1].trim(); r.author = m1[2].trim().substring(0, 10); break; }
+                const m2 = t.match(new RegExp(`^(${DYNASTY_RE.source})[·・·\\s]\\s*(\\S+)`));
+                if(m2) { r.dynasty = m2[1]; r.author = m2[2].substring(0, 10); break; }
+                const m3 = t.match(/作者[：:]\s*(\S+)/);
+                if(m3) { r.author = m3[1]; break; }
+            }
+            if(r.author === "佚名" && r.title.includes("·")) {
+                const parts = r.title.split("·");
+                if(parts.length >= 2 && parts[0].length <= 6) r.author = parts[0];
+            }
+
+            // 正文與賞析分離
+            let isAnalysis = false;
+            for(const line of lines) {
+                const t = line.trim();
+                if(!isAnalysis && (t.includes("賞析") || t.includes("簡析") || t.includes("作品賞析"))) {
+                    isAnalysis = true;
+                    if(t.length < 25) continue;
+                }
+                if(isAnalysis) { r.analysis += line + "\n"; }
+                else if(!t.includes(r.title) && !t.includes(r.author) && t !== "" && t !== r.title) {
+                    r.content += line + "\n";
+                }
+            }
+        }
+
+        return {
+            title:      r.title.trim(),
+            author:     r.author.trim(),
+            dynasty:    r.dynasty.trim(),
+            biography:  trimLines(r.biography),
+            content:    trimLines(r.content)    || "（原文待錄入）",
+            background: trimLines(r.background),
+            analysis:   trimLines(r.analysis)   || "（暫無賞析，可自行補充）",
+        };
+    }
+
+    function showPreview(parsed) {
+        document.getElementById('editTitle').value      = parsed.title;
+        document.getElementById('editAuthor').value     = parsed.author;
+        document.getElementById('editDynasty').value    = parsed.dynasty    || '';
+        document.getElementById('editBiography').value  = parsed.biography  || '';
+        document.getElementById('editContent').value    = parsed.content;
+        document.getElementById('editBackground').value = parsed.background || '';
+        document.getElementById('editAnalysis').value   = parsed.analysis;
+        document.getElementById('previewBlock').classList.add('show');
+        document.getElementById('previewBlock').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('parseBtn').onclick = () => {
+        const raw = document.getElementById('rawTextInput').value;
+        if(!raw.trim()) { showToast("請先貼上詩詞內容"); return; }
+        const parsed = smartParse(raw);
+        if(parsed) showPreview(parsed);
+    };
+
+    document.getElementById('clearBtn').onclick = () => {
+        document.getElementById('rawTextInput').value = '';
+        document.getElementById('previewBlock').classList.remove('show');
+    };
+
+    document.getElementById('reparseBtn').onclick = () => {
+        document.getElementById('previewBlock').classList.remove('show');
+        document.getElementById('rawTextInput').focus();
+    };
+
+    function getFormValues() {
+        return {
+            title:      document.getElementById('editTitle').value.trim(),
+            author:     document.getElementById('editAuthor').value.trim() || "佚名",
+            dynasty:    document.getElementById('editDynasty').value.trim(),
+            biography:  document.getElementById('editBiography').value.trim(),
+            content:    document.getElementById('editContent').value.trim(),
+            background: document.getElementById('editBackground').value.trim(),
+            analysis:   document.getElementById('editAnalysis').value.trim() || "（暫無賞析）",
+        };
+    }
+
+    function resetAll() {
+        document.getElementById('rawTextInput').value = '';
+        document.getElementById('previewBlock').classList.remove('show');
+        document.getElementById('mergeBlock').classList.remove('show');
+    }
+
+    function commitAdd(entry) {
+        const db = loadDB();
+        const newId = "id_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+        db.push({ id: newId, ...entry });
+        saveDB(db);
+        showToast(`✅ 成功收錄：《${entry.title}》 · ${entry.author}`, 3000);
+        setTimeout(resetAll, 800);
+    }
+
+    function commitUpdate(id, entry) {
+        const db = loadDB();
+        const idx = db.findIndex(w => w.id === id);
+        if(idx !== -1) db[idx] = { ...db[idx], ...entry };
+        saveDB(db);
+    }
+
+    document.getElementById('confirmBtn').onclick = () => {
+        const val = getFormValues();
+        if(!val.title) { showToast("請填入標題"); return; }
+        if(!val.content) { showToast("請填入正文"); return; }
+
+        const db = loadDB();
+        const duplicate = db.find(w => w.author === val.author && w.title === val.title);
+
+        if(duplicate) {
+            // 顯示整合面板
+            document.getElementById('mergeOldContent').textContent = duplicate.content;
+            document.getElementById('mergeOldAnalysis').textContent = duplicate.analysis;
+            document.getElementById('mergeNewContent').textContent = val.content;
+            document.getElementById('mergeNewAnalysis').textContent = val.analysis;
+            const mergeBlock = document.getElementById('mergeBlock');
+            mergeBlock.classList.add('show');
+            mergeBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            mergeBlock.dataset.duplicateId = duplicate.id;
+        } else {
+            commitAdd(val);
+        }
+    };
+
+    // 整合面板：以新替換
+    document.getElementById('mergeReplaceBtn').onclick = () => {
+        const val = getFormValues();
+        const id = document.getElementById('mergeBlock').dataset.duplicateId;
+        commitUpdate(id, { title: val.title, author: val.author, content: val.content, analysis: val.analysis });
+        showToast(`✅ 已更新：《${val.title}》 · ${val.author}`, 3000);
+        setTimeout(resetAll, 800);
+    };
+
+    // 整合面板：合併（舊在前、新接後，以分隔線區分）
+    document.getElementById('mergeCombineBtn').onclick = () => {
+        const val = getFormValues();
+        const id = document.getElementById('mergeBlock').dataset.duplicateId;
+        const db = loadDB();
+        const old = db.find(w => w.id === id);
+        const separator = "\n\n──────────\n\n";
+        const mergedContent  = old.content  + separator + val.content;
+        const mergedAnalysis = old.analysis + separator + val.analysis;
+        commitUpdate(id, { content: mergedContent, analysis: mergedAnalysis });
+        showToast(`✅ 已合併：《${val.title}》 · ${val.author}`, 3000);
+        setTimeout(resetAll, 800);
+    };
+
+    // 整合面板：另存新增（忽略重複，強制新增）
+    document.getElementById('mergeNewBtn').onclick = () => {
+        commitAdd(getFormValues());
+    };
+
+    // 整合面板：取消
+    document.getElementById('mergeCancelBtn').onclick = () => {
+        document.getElementById('mergeBlock').classList.remove('show');
+    };
+
+    // ─── 編輯模式：偵測 ?edit=id URL 參數 ───
+    (function initEditMode() {
+        const params = new URLSearchParams(window.location.search);
+        const editId = params.get('edit');
+        if(!editId) return;
+
+        const db = loadDB();
+        const work = db.find(w => w.id === editId);
+        if(!work) { showToast("找不到指定作品"); return; }
+
+        // 切換為編輯模式 UI
+        document.getElementById('pageTitle').textContent = '✏️ 編輯作品';
+        document.getElementById('inputBlock').style.display = 'none';          // 隱藏貼上區
+        document.getElementById('previewTitle').textContent = '編輯作品內容';
+        document.getElementById('reparseBtn').style.display = 'none';          // 隱藏重新分析
+        document.getElementById('confirmBtn').textContent = '💾 儲存變更';
+
+        // 預填欄位
+        document.getElementById('editTitle').value      = work.title;
+        document.getElementById('editAuthor').value     = work.author;
+        document.getElementById('editDynasty').value    = work.dynasty    || '';
+        document.getElementById('editBiography').value  = work.biography  || '';
+        document.getElementById('editContent').value    = work.content;
+        document.getElementById('editBackground').value = work.background || '';
+        document.getElementById('editAnalysis').value   = work.analysis;
+        document.getElementById('previewBlock').classList.add('show');
+
+        // 覆寫確認按鈕行為：更新而非新增
+        document.getElementById('confirmBtn').onclick = () => {
+            const val = getFormValues();
+            if(!val.title) { showToast("請填入標題"); return; }
+            if(!val.content) { showToast("請填入正文"); return; }
+            commitUpdate(editId, val);
+            showToast(`💾 已儲存：《${val.title}》 · ${val.author}`, 3000);
+            setTimeout(() => window.close(), 1000);
+        };
+    })();
+</script>
+</body>
+</html>
