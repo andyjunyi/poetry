@@ -1,0 +1,661 @@
+以下是您所需的诗词鉴赏主页的代码。它整合了李清照《声声慢》的讲义，并预置了作品管理与查询功能，方便您日后扩展。
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>诗词典藏阁 · 鉴赏文库 | 作品管理与查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #ede6d6;
+            font-family: 'Segoe UI', '华文楷书', 'Microsoft YaHei', '宋体', 'KaiTi', serif;
+            color: #2b221a;
+            line-height: 1.55;
+            padding: 1.5rem 1rem;
+        }
+
+        /* 主容器 */
+        .app-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: #fefcf5;
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* 头部 + 导航 */
+        .header {
+            background: #2e241a;
+            color: #f2e5d2;
+            padding: 1.2rem 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+        }
+
+        .title-area h1 {
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            font-weight: 500;
+        }
+
+        .title-area p {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .nav-links span {
+            background: #4f3a28;
+            padding: 0.3rem 0.9rem;
+            border-radius: 30px;
+            cursor: default;
+        }
+
+        /* 工具栏：查询 + 新增作品入口 */
+        .toolbar {
+            background: #f4ede1;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e1cfb0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: center;
+            flex: 2;
+        }
+
+        .search-section input, .search-section select {
+            padding: 0.5rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid #cfbe9b;
+            background: white;
+            font-family: inherit;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .search-section input {
+            flex: 2;
+            min-width: 160px;
+        }
+
+        .search-section select {
+            background: white;
+            cursor: pointer;
+        }
+
+        .search-section button, .add-btn {
+            background: #7e5a3c;
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.2s;
+            font-weight: 500;
+        }
+
+        .search-section button:hover, .add-btn:hover {
+            background: #5c3f27;
+            transform: scale(0.97);
+        }
+
+        .add-btn {
+            background: #4f6d5c;
+        }
+
+        .add-btn:hover {
+            background: #2e4c3c;
+        }
+
+        /* 主要双栏布局 */
+        .main-panel {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        /* 侧边作品列表 */
+        .sidebar {
+            flex: 1.2;
+            min-width: 260px;
+            background: #fef9f0;
+            border-right: 1px solid #e7dcc8;
+            padding: 1.5rem 1rem;
+        }
+
+        .sidebar h3 {
+            font-size: 1.3rem;
+            border-left: 5px solid #b4824a;
+            padding-left: 12px;
+            margin-bottom: 1.2rem;
+            color: #3b2a1c;
+        }
+
+        .work-list {
+            list-style: none;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .work-list li {
+            padding: 0.7rem 0.5rem;
+            border-bottom: 1px dashed #e2d2b6;
+            cursor: pointer;
+            transition: 0.1s;
+            border-radius: 12px;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .work-list li:hover {
+            background: #eadfcb;
+        }
+
+        .work-title {
+            font-weight: 600;
+            color: #563e24;
+        }
+
+        .work-author {
+            font-size: 0.75rem;
+            color: #8a6f4b;
+        }
+
+        .active-work {
+            background: #e9dccc;
+            border-left: 4px solid #b1622c;
+        }
+
+        /* 右侧内容展示区 */
+        .content-area {
+            flex: 3;
+            padding: 1.8rem 2rem;
+            background: #fffdf8;
+        }
+
+        .detail-card {
+            animation: fade 0.2s ease;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(6px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        .poem-full {
+            background: #fef5e9;
+            padding: 1.2rem 1.8rem;
+            border-radius: 28px;
+            margin: 1rem 0;
+            border-left: 6px solid #bb8b60;
+            font-family: '华文楷书', 'KaiTi', serif;
+            line-height: 1.8;
+            white-space: pre-line;
+        }
+
+        .analysis {
+            margin-top: 1.5rem;
+        }
+
+        .analysis h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #794f2a;
+        }
+
+        hr {
+            margin: 1rem 0;
+            border: 0;
+            height: 1px;
+            background: #ebddc4;
+        }
+
+        /* 模态框 - 新增作品 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #fff8ef;
+            max-width: 550px;
+            width: 90%;
+            border-radius: 32px;
+            padding: 1.8rem;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.3);
+            border: 1px solid #efdead;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 1rem;
+            color: #4b341d;
+        }
+
+        .modal-content input, .modal-content textarea {
+            width: 100%;
+            margin: 0.5rem 0 1rem;
+            padding: 0.7rem;
+            border-radius: 20px;
+            border: 1px solid #cfbc96;
+            font-family: inherit;
+            background: white;
+        }
+
+        .modal-content textarea {
+            min-height: 100px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .modal-buttons button {
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .save-btn {
+            background: #7e5a3c;
+            color: white;
+        }
+
+        .cancel-btn {
+            background: #cfb894;
+        }
+
+        footer {
+            text-align: center;
+            background: #efe6d8;
+            padding: 0.8rem;
+            font-size: 0.75rem;
+            color: #6b533a;
+            border-top: 1px solid #e1cfb0;
+        }
+
+        @media (max-width: 780px) {
+            .main-panel {
+                flex-direction: column;
+            }
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e7dcc8;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        .empty-tip {
+            color: #aa8e6b;
+            text-align: center;
+            padding: 2rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="header">
+        <div class="title-area">
+            <h1>📖 诗词典藏阁 · 鉴赏文库</h1>
+            <p>作品检索 · 名家赏析 · 可扩展文库</p>
+        </div>
+        <div class="nav-links">
+            <span>🏷️ 婉约风雅</span>
+            <span>📚 支持增删查</span>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="按名称 / 作者 / 内容关键词搜索..." autocomplete="off">
+            <select id="searchType">
+                <option value="all">综合查询</option>
+                <option value="title">按名称</option>
+                <option value="author">按作者</option>
+                <option value="content">按内容</option>
+            </select>
+            <button id="searchBtn">🔍 查询</button>
+            <button id="resetBtn">⟳ 重置</button>
+        </div>
+        <button id="openAddModalBtn" class="add-btn">➕ 新增作品</button>
+    </div>
+
+    <div class="main-panel">
+        <!-- 左侧作品列表 -->
+        <div class="sidebar">
+            <h3>📌 作品目录</h3>
+            <ul class="work-list" id="workList">
+                <!-- 动态渲染诗词列表 -->
+                <li style="justify-content:center;">加载文库中...</li>
+            </ul>
+            <p style="font-size: 0.7rem; margin-top: 12px; color:#af9474;">* 点击作品查看详情 | 支持动态扩充</p>
+        </div>
+
+        <!-- 右侧详情展示区 -->
+        <div class="content-area" id="contentArea">
+            <div style="text-align: center; padding: 2rem;" class="empty-tip">
+                ✨ 请从左侧选择作品，或使用搜索功能<br>
+                可新增诗词文章，日后持续扩充文库
+            </div>
+        </div>
+    </div>
+    <footer>
+        📜 内置李清照《声声慢》讲义 · 支持名称/作者/内容模糊检索 · 可无限扩充作品库
+    </footer>
+</div>
+
+<!-- 新增作品模态框 -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2>📝 新增诗词 / 作品</h2>
+        <label>作品名称 *</label>
+        <input type="text" id="newTitle" placeholder="例：青玉案·元夕">
+        <label>作者 *</label>
+        <input type="text" id="newAuthor" placeholder="例：辛弃疾">
+        <label>原文内容</label>
+        <textarea id="newContent" placeholder="录入全文，换行保留原作格式……"></textarea>
+        <label>赏析 / 简介</label>
+        <textarea id="newAnalysis" placeholder="可留白，或填写作品赏析、背景等"></textarea>
+        <div class="modal-buttons">
+            <button class="cancel-btn" id="closeModalBtn">取消</button>
+            <button class="save-btn" id="confirmAddBtn">保存作品</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --------------------------------------------------------------
+    // 作品库数据结构 —— 日后可无限增加
+    // 内置李清照《声声慢》完整讲义内容
+    // --------------------------------------------------------------
+    let poetryDB = [
+        {
+            id: "ssm_001",
+            title: "声声慢·寻寻觅觅",
+            author: "李清照",
+            dynasty: "宋",
+            content: `寻寻觅觅，冷冷清清，凄凄惨惨戚戚。
+乍暖还寒时候，最难将息。
+三杯两盏淡酒，怎敌他、晚来风急！
+雁过也，正伤心，却是旧时相识。
+
+满地黄花堆积，憔悴损，如今有谁堪摘？
+守着窗儿，独自怎生得黑！
+梧桐更兼细雨，到黄昏、点点滴滴。
+这次第，怎一个愁字了得！`,
+            analysis: `【作者介绍】李清照（1084-1155），号易安居士，济南人，宋代婉约词宗，被誉为“千古第一才女”。南渡后历经国破家亡，词风沉郁。
+【创作背景】此词作于南渡之后，国破、夫亡、流离失所，残秋孤寂中写尽愁苦。
+【艺术赏析】
+1. 开创性叠字：“寻寻觅觅，冷冷清清，凄凄惨惨戚戚”七组叠字浑然天成，从动作、环境到心境层层递进。
+2. 经典意象：淡酒难敌晚风、过雁伤心、黄花憔悴、梧桐细雨，渲染愁情极致。
+3. 结句“怎一个愁字了得”以反问强化无尽悲凉，被誉为写愁巅峰之作。`
+        }
+    ];
+
+    // 辅助函数：深拷贝用于后续添加id
+    function generateId() {
+        return 'poem_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    }
+
+    // 当前选中的作品id
+    let currentSelectedId = "ssm_001";
+
+    // 渲染左侧作品列表 (基于当前展示数据，可随search过滤)
+    let currentFilteredList = []; // 存储过滤后的作品列表
+
+    function renderWorkList(filteredArray) {
+        const listContainer = document.getElementById('workList');
+        if (!filteredArray || filteredArray.length === 0) {
+            listContainer.innerHTML = '<li style="justify-content:center; color:#b0794e;">📭 暂无匹配作品</li>';
+            return;
+        }
+        listContainer.innerHTML = '';
+        filteredArray.forEach(work => {
+            const li = document.createElement('li');
+            li.className = currentSelectedId === work.id ? 'active-work' : '';
+            li.innerHTML = `
+                <div style="flex:1">
+                    <div class="work-title">${escapeHtml(work.title)}</div>
+                    <div class="work-author">${escapeHtml(work.author)}</div>
+                </div>
+                <span style="font-size:18px;">📖</span>
+            `;
+            li.addEventListener('click', (e) => {
+                e.stopPropagation();
+                currentSelectedId = work.id;
+                renderWorkList(filteredArray); // 刷新高亮
+                showWorkDetail(work.id);
+            });
+            listContainer.appendChild(li);
+        });
+    }
+
+    // 展示作品详情
+    function showWorkDetail(id) {
+        const work = poetryDB.find(p => p.id === id);
+        if (!work) {
+            document.getElementById('contentArea').innerHTML = '<div class="empty-tip">未找到作品信息</div>';
+            return;
+        }
+        const contentHtml = `
+            <div class="detail-card">
+                <h2 style="color:#4f371f;">📖 ${escapeHtml(work.title)} <span style="font-size:1rem;">· ${escapeHtml(work.author)}</span></h2>
+                <div class="poem-full">${formatContentWithLine(work.content)}</div>
+                <div class="analysis">
+                    <h4>🍃 作品赏析 · 背景评析</h4>
+                    <div style="white-space: pre-line; line-height:1.7;">${work.analysis ? escapeHtml(work.analysis).replace(/\n/g, '<br>') : '暂无赏析内容，可点击新增完善。'}</div>
+                </div>
+                <hr>
+                <div style="font-size:0.8rem; color:#9b7a57;">🔍 关键字：${escapeHtml(work.title)} · ${escapeHtml(work.author)} · 支持全文检索</div>
+            </div>
+        `;
+        document.getElementById('contentArea').innerHTML = contentHtml;
+    }
+
+    // 辅助: 简单转义html
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    function formatContentWithLine(content) {
+        if (!content) return '暂无原文';
+        return escapeHtml(content).replace(/\n/g, '<br>');
+    }
+
+    // 搜索逻辑 (综合/标题/作者/内容)
+    function performSearch() {
+        const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+        const type = document.getElementById('searchType').value;
+
+        if (keyword === '') {
+            // 重置显示全部
+            currentFilteredList = [...poetryDB];
+            renderWorkList(currentFilteredList);
+            if (currentFilteredList.length > 0) {
+                const isExist = currentFilteredList.some(w => w.id === currentSelectedId);
+                if (!isExist && currentFilteredList.length) {
+                    currentSelectedId = currentFilteredList[0].id;
+                    showWorkDetail(currentSelectedId);
+                } else if (isExist) {
+                    showWorkDetail(currentSelectedId);
+                } else {
+                    if (currentFilteredList.length) showWorkDetail(currentFilteredList[0].id);
+                    else document.getElementById('contentArea').innerHTML = '<div class="empty-tip">没有作品，请新增</div>';
+                }
+            } else {
+                document.getElementById('contentArea').innerHTML = '<div class="empty-tip">无作品，点击“新增作品”建立文库</div>';
+            }
+            return;
+        }
+
+        let filtered = poetryDB.filter(work => {
+            if (type === 'title') {
+                return work.title.toLowerCase().includes(keyword);
+            } else if (type === 'author') {
+                return work.author.toLowerCase().includes(keyword);
+            } else if (type === 'content') {
+                return work.content.toLowerCase().includes(keyword);
+            } else { // all 综合查询: 标题/作者/内容
+                return work.title.toLowerCase().includes(keyword) ||
+                       work.author.toLowerCase().includes(keyword) ||
+                       work.content.toLowerCase().includes(keyword);
+            }
+        });
+        currentFilteredList = filtered;
+        renderWorkList(currentFilteredList);
+        if (filtered.length > 0) {
+            // 如果当前选中的作品在过滤结果中则保留，否则展示第一个
+            const stillExists = filtered.some(w => w.id === currentSelectedId);
+            if (stillExists) {
+                showWorkDetail(currentSelectedId);
+            } else {
+                currentSelectedId = filtered[0].id;
+                showWorkDetail(currentSelectedId);
+            }
+        } else {
+            document.getElementById('contentArea').innerHTML = '<div class="empty-tip">😢 未找到相关作品，请尝试其他关键词或新增作品</div>';
+        }
+    }
+
+    // 重置搜索
+    function resetSearch() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchType').value = 'all';
+        currentFilteredList = [...poetryDB];
+        renderWorkList(currentFilteredList);
+        if (currentFilteredList.length) {
+            const isExist = currentFilteredList.some(w => w.id === currentSelectedId);
+            if (!isExist) {
+                currentSelectedId = currentFilteredList[0].id;
+            }
+            showWorkDetail(currentSelectedId);
+        } else {
+            document.getElementById('contentArea').innerHTML = '<div class="empty-tip">暂无作品，请新增</div>';
+        }
+    }
+
+    // 新增作品
+    function openAddModal() {
+        document.getElementById('addModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('addModal').style.display = 'none';
+        document.getElementById('newTitle').value = '';
+        document.getElementById('newAuthor').value = '';
+        document.getElementById('newContent').value = '';
+        document.getElementById('newAnalysis').value = '';
+    }
+
+    function addNewWork() {
+        const title = document.getElementById('newTitle').value.trim();
+        const author = document.getElementById('newAuthor').value.trim();
+        const content = document.getElementById('newContent').value.trim();
+        const analysis = document.getElementById('newAnalysis').value.trim();
+
+        if (!title || !author) {
+            alert('作品名称和作者均为必填项！');
+            return;
+        }
+        const newId = generateId();
+        const newWork = {
+            id: newId,
+            title: title,
+            author: author,
+            dynasty: '待考',
+            content: content || '（原文待录入）',
+            analysis: analysis || '暂无详细赏析，可随后编辑。'
+        };
+        poetryDB.push(newWork);
+        // 重置过滤列表，刷新界面
+        resetSearch();   // 会刷新列表且显示全部
+        // 自动选中新增作品
+        currentSelectedId = newId;
+        currentFilteredList = [...poetryDB];
+        renderWorkList(currentFilteredList);
+        showWorkDetail(newId);
+        closeModal();
+        // 可选滚动条高亮
+    }
+
+    // 初始化数据 & 同步列表
+    function init() {
+        currentFilteredList = [...poetryDB];
+        renderWorkList(currentFilteredList);
+        if (poetryDB.length > 0) {
+            currentSelectedId = poetryDB[0].id;
+            showWorkDetail(currentSelectedId);
+        } else {
+            document.getElementById('contentArea').innerHTML = '<div class="empty-tip">✨ 欢迎使用诗词文库，点击“新增作品”开始建立您的收藏</div>';
+        }
+        // 绑定事件
+        document.getElementById('searchBtn').addEventListener('click', performSearch);
+        document.getElementById('resetBtn').addEventListener('click', resetSearch);
+        document.getElementById('openAddModalBtn').addEventListener('click', openAddModal);
+        document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+        document.getElementById('confirmAddBtn').addEventListener('click', addNewWork);
+        window.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('addModal')) closeModal();
+        });
+        // 搜索框支持回车
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') performSearch();
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
+```
