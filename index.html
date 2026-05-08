@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>诗词智能文库</title>
+    <title>詩詞智能文庫</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #e7dfcf; font-family: 'Segoe UI', 'KaiTi', serif; padding: 1.5rem; }
+        body { background: #e7dfcf; font-family: 'Segoe UI', 'KaiTi', '微軟正黑體', serif; padding: 1.5rem; }
         .app-wrapper { max-width: 1400px; margin: 0 auto; background: #fffdf7; border-radius: 2rem; overflow: hidden; }
         .header { background: #2d241b; color: #f2e5d2; padding: 1rem 2rem; }
         .smart-zone { background: #f8f2e6; margin: 1.2rem 1.8rem; border-radius: 32px; padding: 1.2rem; }
@@ -32,32 +32,33 @@
 </head>
 <body>
 <div class="app-wrapper">
-    <div class="header"><h1>📚 诗词·智能文库</h1></div>
+    <div class="header"><h1>📚 詩詞·智能文庫</h1></div>
     <div class="smart-zone">
-        <textarea id="rawTextInput" rows="4" placeholder="直接粘贴诗词内容，系统自动识别标题、作者、正文、赏析..."></textarea>
-        <div class="button-group" style="margin-top:1rem; text-align:right;"><button class="btn-parse" id="smartParseBtn">✨ 智能分析并新增</button></div>
+        <textarea id="rawTextInput" rows="4" placeholder="直接貼上詩詞內容，系統自動識別標題、作者、正文、賞析..."></textarea>
+        <div class="button-group" style="margin-top:1rem; text-align:right;"><button class="btn-parse" id="smartParseBtn">✨ 智能分析並新增</button></div>
     </div>
     <div class="toolbar">
         <div class="search-area">
-            <input type="text" id="searchKeyword" placeholder="搜索...">
-            <select id="searchMode"><option value="all">综合</option><option value="title">按名称</option><option value="author">按作者</option></select>
-            <button id="searchBtn">🔍 检索</button>
+            <input type="text" id="searchKeyword" placeholder="搜尋...">
+            <select id="searchMode"><option value="all">綜合</option><option value="title">按名稱</option><option value="author">按作者</option></select>
+            <button id="searchBtn">🔍 檢索</button>
             <button id="resetBtn">⟳ 重置</button>
         </div>
-        <span>📖 作品数: <span id="workCount">0</span></span>
+        <span>📖 作品數: <span id="workCount">0</span></span>
     </div>
     <div class="dual-panel">
-        <div class="sidebar"><h3>📜 作品目录</h3><ul class="work-list" id="workList"><li>加载中...</li></ul></div>
-        <div class="content-area" id="contentArea"><div style="text-align:center; padding:2rem;">请选择作品或智能粘贴新增</div></div>
+        <div class="sidebar"><h3>📜 作品目錄</h3><ul class="work-list" id="workList"><li>載入中...</li></ul></div>
+        <div class="content-area" id="contentArea"><div style="text-align:center; padding:2rem;">請選擇作品或智能貼上新增</div></div>
     </div>
-    <footer>⚡ 智能解析引擎 · 自动提取作者/作品/赏析</footer>
+    <footer>⚡ 智能解析引擎 · 自動提取作者／作品／賞析</footer>
 </div>
-<div id="toastModal" class="modal"><div class="modal-card"><p id="toastMsg"></p><button id="closeToast" style="margin-top:1rem; padding:0.3rem 1rem; background:#b28654; border:none; border-radius:30px; color:white;">确定</button></div></div>
+<div id="toastModal" class="modal"><div class="modal-card"><p id="toastMsg"></p><button id="closeToast" style="margin-top:1rem; padding:0.3rem 1rem; background:#b28654; border:none; border-radius:30px; color:white;">確定</button></div></div>
 
 <script>
+    // 初始資料庫 (內建兩首李清照經典，賞析內容轉換為繁體)
     let poetryDatabase = [
-        { id: "p1", title: "声声慢·寻寻觅觅", author: "李清照", content: "寻寻觅觅，冷冷清清...", analysis: "开篇七组叠字空前绝后" },
-        { id: "p2", title: "如梦令·昨夜雨疏风骤", author: "李清照", content: "昨夜雨疏风骤...", analysis: "绿肥红瘦，含蓄蕴藉" }
+        { id: "p1", title: "聲聲慢·尋尋覓覓", author: "李清照", content: "尋尋覓覓，冷冷清清，淒淒慘慘戚戚。\n乍暖還寒時候，最難將息。\n三杯兩盞淡酒，怎敵他、晚來風急！\n雁過也，正傷心，卻是舊時相識。\n\n滿地黃花堆積，憔悴損，如今有誰堪摘？\n守著窗兒，獨自怎生得黑！\n梧桐更兼細雨，到黃昏、點點滴滴。\n這次第，怎一個愁字了得！", analysis: "【賞析】開篇七組疊字「尋尋覓覓，冷冷清清，淒淒慘慘戚戚」空前絕後，由動作至環境、再至心境層層遞進。全詞以淡酒、過雁、黃花、梧桐細雨等意象鋪陳愁緒，結尾「怎一個愁字了得」將國破家亡之痛與孤苦飄零之悲凝聚為愁情巔峰之作。" },
+        { id: "p2", title: "如夢令·昨夜雨疏風驟", author: "李清照", content: "昨夜雨疏風驟，濃睡不消殘酒。\n試問卷簾人，卻道海棠依舊。\n知否，知否？應是綠肥紅瘦。", analysis: "【賞析】此詞為李清照前期名篇，借宿酒醒後詢問花事，委婉惜春。「綠肥紅瘦」極煉如不煉，以色彩形態寫盡春光消逝之嘆，含蓄蘊藉，千古傳誦。" }
     ];
     let currentSelectedId = "p1";
     
@@ -65,7 +66,7 @@
     
     function renderWorkList(works) {
         const container = document.getElementById('workList');
-        if(!works.length){ container.innerHTML='<li>暂无作品</li>'; return; }
+        if(!works.length){ container.innerHTML='<li>暫無作品</li>'; return; }
         container.innerHTML = '';
         works.forEach(work => {
             const li = document.createElement('li');
@@ -83,7 +84,7 @@
         document.getElementById('contentArea').innerHTML = `
             <h2>${escapeHtml(work.title)} · ${escapeHtml(work.author)}</h2>
             <div class="poem-block">${escapeHtml(work.content).replace(/\n/g,'<br>')}</div>
-            <div class="analysis-block"><strong>赏析</strong><br>${escapeHtml(work.analysis).replace(/\n/g,'<br>')}</div>
+            <div class="analysis-block"><strong>賞析</strong><br>${escapeHtml(work.analysis).replace(/\n/g,'<br>')}</div>
         `;
     }
     
@@ -95,30 +96,74 @@
         setTimeout(() => modal.style.display = 'none', 2000);
     }
     
+    // 智能解析：自動識別標題、作者、正文、賞析（支援多種格式）
     function smartParseAndAdd(rawText) {
-        if(!rawText.trim()) { showToast("请粘贴有效内容"); return false; }
+        if(!rawText.trim()) { showToast("請貼上有效內容"); return false; }
         let lines = rawText.split(/\r?\n/);
         let title = "未命名", author = "佚名", content = "", analysis = "";
+        
+        // 嘗試提取標題：含有「·」、書名號或第一行非空
         for(let line of lines) {
-            if(line.includes("·") && !title) title = line.trim();
-            else if(line.match(/[〔\[（【]/) && line.match(/[\]）】〕]/) && !author) author = line.replace(/[〔\[（【]/g,'').replace(/[\]）】〕]/g,'').trim();
+            let trimmed = line.trim();
+            if(trimmed && (trimmed.includes("·") || trimmed.includes("《") || trimmed.includes("【")) && !title) {
+                title = trimmed.replace(/[《》【】]/g, '').substring(0, 60);
+                break;
+            }
         }
-        if(title === "未命名" && lines[0]) title = lines[0].trim().substring(0,50);
-        let bodyLines = [], isAnalysis = false;
-        for(let line of lines){
-            if(line.includes("赏析") || line.includes("【赏析】")) isAnalysis = true;
-            if(isAnalysis) analysis += line + "\n";
-            else if(!line.includes(title) && !line.includes(author) && line.trim()) content += line + "\n";
+        if(title === "未命名" && lines[0]) title = lines[0].trim().substring(0, 50);
+        
+        // 嘗試提取作者：常見〔宋〕、作者：、括號內朝代+人名
+        for(let i=0; i<lines.length; i++) {
+            let line = lines[i].trim();
+            let match = line.match(/[〔\[（【]?\s*([^\]\)）】]+)[\]\)）】]?\s*[唐宋明清]/);
+            if(match && match[1].length>=2) {
+                author = match[1].trim();
+                break;
+            }
+            let authorMatch = line.match(/作者[：:]\s*(\S+)/);
+            if(authorMatch) {
+                author = authorMatch[1];
+                break;
+            }
+            // 純括號形式如 〔宋〕李清照
+            let pureMatch = line.match(/[〔\[（【](.+?)[\]\)）】]/);
+            if(pureMatch && pureMatch[1].length<=6 && (line.includes("宋")||line.includes("唐")||line.includes("清"))) {
+                author = pureMatch[1];
+                break;
+            }
         }
-        content = content.trim() || "原文待补充";
-        analysis = analysis.trim() || "暂无赏析";
-        const newId = "id_"+Date.now();
+        
+        // 分離正文與賞析區塊
+        let isAnalysisZone = false;
+        for(let line of lines) {
+            let trimmed = line.trim();
+            if(!isAnalysisZone && (trimmed.includes("賞析") || trimmed.includes("【賞析】") || trimmed.includes("作品賞析") || trimmed.includes("簡析"))) {
+                isAnalysisZone = true;
+                if(trimmed.length < 20) continue; // 跳過單純標題列
+            }
+            if(isAnalysisZone) {
+                analysis += line + "\n";
+            } else {
+                // 跳過已被當成標題或作者的那幾行避免重複
+                if(!trimmed.includes(title) && !trimmed.includes(author) && !(title !== "未命名" && trimmed === title) && trimmed !== "")
+                    content += line + "\n";
+            }
+        }
+        
+        content = content.trim() || "（原文待補充）";
+        analysis = analysis.trim() || "（暫無賞析，可後續編輯）";
+        
+        // 避免標題過長或空值
+        title = title.substring(0, 80) || "未命名詩詞";
+        author = author.substring(0, 40) || "佚名";
+        
+        const newId = "id_"+Date.now() + "_" + Math.random().toString(36).substr(2, 4);
         poetryDatabase.push({ id: newId, title: title, author: author, content: content, analysis: analysis });
         resetAndDisplay();
         currentSelectedId = newId;
         renderWorkList([...poetryDatabase]);
         showDetail(newId);
-        showToast(`✅ 新增：${title}`);
+        showToast(`✅ 新增成功：《${title}》 · ${author}`);
         return true;
     }
     
@@ -134,12 +179,19 @@
         let filtered = poetryDatabase.filter(w=> w.title.toLowerCase().includes(kw) || w.author.toLowerCase().includes(kw));
         renderWorkList(filtered);
         if(filtered.length) showDetail(filtered[0].id);
+        else document.getElementById('contentArea').innerHTML = '<div style="text-align:center; padding:2rem;">🔍 查無相關作品</div>';
     }
     
-    document.getElementById('smartParseBtn').onclick = () => { smartParseAndAdd(document.getElementById('rawTextInput').value); document.getElementById('rawTextInput').value = ''; };
+    // 綁定事件
+    document.getElementById('smartParseBtn').onclick = () => { 
+        const rawVal = document.getElementById('rawTextInput').value;
+        if(smartParseAndAdd(rawVal)) document.getElementById('rawTextInput').value = '';
+    };
     document.getElementById('searchBtn').onclick = performSearch;
     document.getElementById('resetBtn').onclick = resetAndDisplay;
     document.getElementById('searchKeyword').onkeypress = (e) => { if(e.key === 'Enter') performSearch(); };
+    
+    // 初始載入
     resetAndDisplay();
 </script>
 </body>
