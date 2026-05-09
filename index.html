@@ -197,6 +197,8 @@
             .content-area { padding: 1rem; }
         }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="app-wrapper">
@@ -232,6 +234,23 @@
 <div class="toast-bar" id="toastBar"></div>
 
 <script>
+    // ═══ Firebase 雲端同步設定（請填入您的 Firebase 專案資訊）═══
+    const FIREBASE_CONFIG = {
+        apiKey:            "YOUR_API_KEY",
+        authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId:         "YOUR_PROJECT_ID",
+        storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId:             "YOUR_APP_ID"
+    };
+    const POEMS_COL = 'poems';
+    let fsDB = null;
+    (function() {
+        if (FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') return;
+        try { firebase.initializeApp(FIREBASE_CONFIG); fsDB = firebase.firestore(); }
+        catch(e) { console.warn('Firebase 初始化失敗', e); }
+    })();
+
     const DB_KEY = 'poetryDatabase';
     const DEFAULT_DB = [
         { id: "p1", title: "聲聲慢·秋情", author: "李清照", dynasty: "南宋",
@@ -388,6 +407,7 @@
         const deletedTitle = db[idx].title;
         db.splice(idx, 1);
         localStorage.setItem(DB_KEY, JSON.stringify(db));
+        if (fsDB) fsDB.collection(POEMS_COL).doc(id).delete().catch(console.error);
         poetryDatabase = db;
         if(currentSelectedId === id) {
             currentSelectedId = db.length ? db[Math.min(idx, db.length - 1)].id : null;
@@ -402,24 +422,59 @@
         window.open(`add.html?edit=${encodeURIComponent(id)}`, '_blank');
     }
 
-    // 監聽 localStorage 變化（add.html 新增或編輯後自動觸發）
-    window.addEventListener('storage', (e) => {
-        if(e.key !== DB_KEY) return;
-        const prevLen = poetryDatabase.length;
-        poetryDatabase = loadDB();
-        // 新增時跳至最新作品；編輯時留在當前選擇
-        if(poetryDatabase.length > prevLen) {
-            currentSelectedId = poetryDatabase[poetryDatabase.length - 1].id;
-        }
-        renderWorkList([...poetryDatabase]);
-        if(currentSelectedId) showDetail(currentSelectedId);
-    });
-
     document.getElementById('searchBtn').onclick = performSearch;
     document.getElementById('resetBtn').onclick = resetAndDisplay;
     document.getElementById('searchKeyword').onkeypress = (e) => { if(e.key === 'Enter') performSearch(); };
 
-    resetAndDisplay();
+    function localStorageHandler(e) {
+        if (e.key !== DB_KEY) return;
+        const prevLen = poetryDatabase.length;
+        poetryDatabase = loadDB();
+        if (poetryDatabase.length > prevLen) currentSelectedId = poetryDatabase[poetryDatabase.length - 1].id;
+        renderWorkList([...poetryDatabase]);
+        if (currentSelectedId) showDetail(currentSelectedId);
+    }
+
+    if (fsDB) {
+        let seeded = false, initialLoaded = false;
+        fsDB.collection(POEMS_COL).onSnapshot(async snapshot => {
+            if (snapshot.empty && !seeded) {
+                seeded = true;
+                const localData = loadDB();
+                let order = 1000;
+                for (const poem of localData) {
+                    await fsDB.collection(POEMS_COL).doc(poem.id).set({ ...poem, _order: poem._order || order });
+                    order += 1000;
+                }
+                return;
+            }
+            seeded = true;
+            if (initialLoaded) {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') currentSelectedId = change.doc.id;
+                });
+            }
+            const poems = snapshot.docs
+                .map(doc => doc.data())
+                .sort((a, b) => (a._order || 0) - (b._order || 0));
+            localStorage.setItem(DB_KEY, JSON.stringify(poems));
+            poetryDatabase = poems;
+            if (!poetryDatabase.find(w => w.id === currentSelectedId)) {
+                currentSelectedId = poetryDatabase.length ? poetryDatabase[0].id : null;
+            }
+            initialLoaded = true;
+            renderWorkList([...poetryDatabase]);
+            if (currentSelectedId) showDetail(currentSelectedId);
+            else document.getElementById('contentArea').innerHTML = '<div style="text-align:center; padding:3rem; color:#aa8b64;">✨ 暫無作品，請點選「新增作品」</div>';
+        }, err => {
+            console.warn('Firestore 連線失敗，使用本地資料', err);
+            resetAndDisplay();
+            window.addEventListener('storage', localStorageHandler);
+        });
+    } else {
+        window.addEventListener('storage', localStorageHandler);
+        resetAndDisplay();
+    }
 </script>
 </body>
 </html>
