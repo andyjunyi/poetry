@@ -181,6 +181,8 @@
         .del-btn { opacity: 0; background: none; border: none; color: #c08070; font-size: 0.95rem; padding: 0.2rem 0.45rem; border-radius: 8px; transition: opacity 0.15s, background 0.15s; cursor: pointer; flex-shrink: 0; }
         .work-list li:hover .del-btn { opacity: 1; }
         .del-btn:hover { background: #fde8e8; color: #c25a4a; }
+        /* 觸控裝置：刪除按鈕一律顯示，避免需點兩次 */
+        @media (hover: none) { .del-btn { opacity: 0.55; } }
 
         /* 底部 Toast 通知 */
         .toast-bar { display: none; position: fixed; bottom: 1.8rem; left: 50%; transform: translateX(-50%); background: #2d241b; color: #f2e5d2; padding: 0.75rem 2rem; border-radius: 40px; font-size: 0.9rem; z-index: 2000; box-shadow: 0 8px 24px rgba(0,0,0,0.25); white-space: nowrap; }
@@ -277,7 +279,21 @@
                     <div class="work-author">✍️ ${work.dynasty ? `〔${escapeHtml(work.dynasty)}〕` : ''}${escapeHtml(work.author)}</div>
                 </div>
                 <button class="del-btn" title="刪除">🗑</button>`;
-            li.querySelector('.del-btn').onclick = (e) => { e.stopPropagation(); confirmDelete(work.id); };
+            const delBtn = li.querySelector('.del-btn');
+            const handleSelect = (e) => {
+                if (e.cancelable) e.preventDefault();
+                currentSelectedId = work.id;
+                renderWorkList(works);
+                showDetail(work.id);
+            };
+            const handleDelete = (e) => {
+                e.stopPropagation();
+                if (e.cancelable) e.preventDefault();
+                confirmDelete(work.id);
+            };
+            delBtn.addEventListener('touchend', handleDelete);
+            delBtn.onclick = (e) => { e.stopPropagation(); confirmDelete(work.id); };
+            li.addEventListener('touchend', handleSelect);
             li.onclick = () => { currentSelectedId = work.id; renderWorkList(works); showDetail(work.id); };
             container.appendChild(li);
         });
