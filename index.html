@@ -204,7 +204,7 @@
     <div class="toolbar">
         <div class="search-area">
             <input type="text" id="searchKeyword" placeholder="搜尋作品名稱或作者...">
-            <select id="searchMode"><option value="all">綜合</option><option value="title">按名稱</option><option value="author">按作者</option></select>
+            <select id="searchMode"><option value="all">綜合</option><option value="title">按名稱</option><option value="author">按作者</option><option value="content">按內容</option></select>
             <button id="searchBtn">🔍 檢索</button>
             <button id="resetBtn">⟳ 重置</button>
         </div>
@@ -350,7 +350,8 @@
         let filtered = poetryDatabase.filter(w => {
             if(mode === 'title') return w.title.toLowerCase().includes(kw);
             if(mode === 'author') return w.author.toLowerCase().includes(kw);
-            return w.title.toLowerCase().includes(kw) || w.author.toLowerCase().includes(kw);
+            if(mode === 'content') return (w.content || '').toLowerCase().includes(kw);
+            return w.title.toLowerCase().includes(kw) || w.author.toLowerCase().includes(kw) || (w.content || '').toLowerCase().includes(kw);
         });
         renderWorkList(filtered);
         if(filtered.length) showDetail(filtered[0].id);
