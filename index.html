@@ -64,6 +64,8 @@
             background: #f2e9dd;
             padding: 0.2rem 1rem;
             border-radius: 40px;
+            display: inline-block;
+            margin-top: 0.5rem;
         }
         
         /* ★ 詩詞正文區：更大字距、寬鬆行距、古雅字體 ★ */
@@ -307,13 +309,13 @@
         document.getElementById('contentArea').innerHTML = `
             <div class="detail-card">
                 <div class="poem-header">
-                    <span class="poem-title-main">${escapeHtml(work.title)}</span>
-                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem;">
-                        <span class="poem-author-main">${work.dynasty ? `〔${escapeHtml(work.dynasty)}〕` : ''}${escapeHtml(work.author)}</span>
-                        <div class="action-btns">
-                            <button class="btn-manage btn-edit-work" id="editBtn">✏️ 編輯</button>
-                            <button class="btn-manage btn-delete-work" id="deleteBtn">🗑️ 刪除</button>
-                        </div>
+                    <div>
+                        <div class="poem-title-main">${escapeHtml(work.title)}</div>
+                        <div class="poem-author-main">${work.dynasty ? `〔${escapeHtml(work.dynasty)}〕` : ''}${escapeHtml(work.author)}</div>
+                    </div>
+                    <div class="action-btns" style="align-self:flex-start;">
+                        <button class="btn-manage btn-edit-work" id="editBtn">✏️ 編輯</button>
+                        <button class="btn-manage btn-delete-work" id="deleteBtn">🗑️ 刪除</button>
                     </div>
                 </div>
                 ${work.biography ? `<div class="bio-block"><strong>✍️ 作者簡介</strong><div style="margin-top:0.5rem;">${fmt(work.biography)}</div></div>` : ''}
