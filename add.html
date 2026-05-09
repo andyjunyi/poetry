@@ -77,8 +77,6 @@
 
         footer { text-align: center; padding: 1rem; font-size: 0.7rem; color: #5c4630; margin-top: 1rem; }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="page-wrapper">
@@ -162,22 +160,22 @@
 <div class="toast" id="toast"></div>
 
 <script>
-    // ═══ Firebase 雲端同步設定（請填入您的 Firebase 專案資訊）═══
-    const FIREBASE_CONFIG = {
-        apiKey:            "YOUR_API_KEY",
-        authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId:         "YOUR_PROJECT_ID",
-        storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId:             "YOUR_APP_ID"
+    // ═══ JSONBin 雲端同步設定（請填入您的 JSONBin 資訊）═══
+    const JSONBIN_CONFIG = {
+        binId:  "YOUR_BIN_ID",
+        apiKey: "YOUR_MASTER_KEY"
     };
-    const POEMS_COL = 'poems';
-    let fsDB = null;
-    (function() {
-        if (FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') return;
-        try { firebase.initializeApp(FIREBASE_CONFIG); fsDB = firebase.firestore(); }
-        catch(e) { console.warn('Firebase 初始化失敗', e); }
-    })();
+    const CLOUD_ENABLED = JSONBIN_CONFIG.binId !== 'YOUR_BIN_ID';
+    const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_CONFIG.binId}`;
+
+    function saveToCloud(db) {
+        if (!CLOUD_ENABLED) return;
+        fetch(JSONBIN_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_CONFIG.apiKey },
+            body: JSON.stringify(db)
+        }).catch(e => console.warn('JSONBin 儲存失敗', e));
+    }
 
     const DB_KEY = 'poetryDatabase';
     const DEFAULT_DB = [
@@ -474,10 +472,9 @@
     function commitAdd(entry) {
         const db = loadDB();
         const newId = "id_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
-        const newEntry = { id: newId, ...entry, _order: Date.now() };
-        db.push(newEntry);
+        db.push({ id: newId, ...entry });
         saveDB(db);
-        if (fsDB) fsDB.collection(POEMS_COL).doc(newId).set(newEntry).catch(console.error);
+        saveToCloud(db);
         showToast(`✅ 成功收錄：《${entry.title}》 · ${entry.author}`, 3000);
         setTimeout(resetAll, 800);
     }
@@ -488,7 +485,7 @@
         if (idx !== -1) {
             db[idx] = { ...db[idx], ...entry };
             saveDB(db);
-            if (fsDB) fsDB.collection(POEMS_COL).doc(id).set(db[idx], { merge: true }).catch(console.error);
+            saveToCloud(db);
         }
     }
 
